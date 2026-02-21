@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { timingSafeEqual } from "crypto";
 import { z } from "zod";
 import { notificationService } from "@server/lib/container";
 import { notificationQueue } from "@server/lib/queue";
@@ -17,24 +18,59 @@ const SendNotificationSchema = z.object({
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+/**
+ * Resolve the real client IP.
+ *
+ * X-Forwarded-For is only trusted when the direct peer (REMOTE_ADDR) is a
+ * known reverse proxy. Without this check an attacker can set the header
+ * themselves and rotate IPs to bypass rate limiting.
+ *
+ * Set TRUSTED_PROXY_IPS="127.0.0.1,::1,10.0.0.1" to match your infra.
+ * Defaults to loopback only (safe for local dev + single-proxy setups).
+ */
+const TRUSTED_PROXIES = new Set(
+	(process.env["TRUSTED_PROXY_IPS"] ?? "127.0.0.1,::1,::ffff:127.0.0.1")
+		.split(",")
+		.map((ip) => ip.trim()),
+);
+
 function clientIp(req: NextRequest): string {
-	return (
-		req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "anonymous"
-	);
+	// Next.js exposes the direct peer address here (not spoofable by the client).
+	const remoteAddr = req.headers.get("x-real-ip") ?? "anonymous";
+
+	if (TRUSTED_PROXIES.has(remoteAddr)) {
+		// Request came through a trusted proxy — the first entry in
+		// X-Forwarded-For is the real client IP.
+		const forwarded = req.headers.get("x-forwarded-for");
+		if (forwarded) return forwarded.split(",")[0]!.trim();
+	}
+
+	return remoteAddr;
 }
 
 /**
- * Returns a 401 response when the API_KEY env var is set and the request
- * does not present a matching Bearer token. Returns null when auth passes.
+ * Returns a 401 response when API_KEY is set and the token doesn't match.
  *
- * When API_KEY is unset the guard is disabled — useful for local development.
+ * Uses timingSafeEqual to prevent timing attacks — a plain string comparison
+ * (auth !== expected) short-circuits on the first differing byte, leaking
+ * information about how much of the token is correct.
+ *
+ * Returns null when auth passes or API_KEY is unset (local dev).
  */
 function checkApiKey(req: NextRequest): NextResponse | null {
 	const apiKey = process.env["API_KEY"];
-	if (!apiKey) return null; // auth disabled
+	if (!apiKey) return null; // auth disabled in local dev
 
-	const auth = req.headers.get("authorization");
-	if (auth !== `Bearer ${apiKey}`) {
+	const auth = req.headers.get("authorization") ?? "";
+	const expected = `Bearer ${apiKey}`;
+
+	// Buffers must be the same byte-length for timingSafeEqual.
+	// Pad/truncate to expected.length so the comparison is always O(N).
+	const providedBuf = Buffer.alloc(expected.length);
+	providedBuf.write(auth.slice(0, expected.length));
+	const expectedBuf = Buffer.from(expected);
+
+	if (!timingSafeEqual(providedBuf, expectedBuf)) {
 		return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
 	}
 	return null;
@@ -48,6 +84,15 @@ export async function GET(req: NextRequest) {
 		const start = Date.now();
 
 		logger.info("GET /api/notifications");
+
+		// ── Auth ────────────────────────────────────────────────────────────────
+		const authError = checkApiKey(req);
+		if (authError) {
+			logger.warn("Unauthorized GET rejected", {
+				ip: clientIp(req),
+			});
+			return authError;
+		}
 
 		const result = await notificationService.findAll();
 		const ms = Date.now() - start;
