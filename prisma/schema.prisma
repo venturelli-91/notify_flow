@@ -1,14 +1,37 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// NotifyFlow — Prisma Schema
+// Docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Core domain models ────────────────────────────────────────────────────────
+
+model Notification {
+  id            String   @id @default(cuid())
+  title         String
+  body          String
+  channel       String   // "email" | "webhook" | "in-app"
+  status        String   @default("pending") // "pending" | "sent" | "failed"
+  metadata      Json?
+  correlationId String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([status])
+  @@index([channel])
+  @@index([createdAt(sort: Desc)])
+}
+
+model Template {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  subject   String
+  body      String   // supports {{variable}} placeholders
+  createdAt DateTime @default(now())
 }
