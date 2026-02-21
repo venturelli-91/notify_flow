@@ -7,18 +7,18 @@
  */
 
 export interface Template {
-  readonly id: string
-  readonly name: string
-  readonly subject: string
-  readonly body: string
-  readonly createdAt: Date
+	readonly id: string;
+	readonly name: string;
+	readonly subject: string;
+	readonly body: string;
+	readonly createdAt: Date;
 }
 
 /**
  * Input required to create a new Template.
  */
 export interface CreateTemplateInput {
-  readonly name: string
-  readonly subject: string
-  readonly body: string
+	readonly name: string;
+	readonly subject: string;
+	readonly body: string;
 }

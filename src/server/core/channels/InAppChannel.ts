@@ -1,7 +1,7 @@
-import { type Result, ok } from '../domain/result/Result'
-import { type DomainError } from '../domain/errors/DomainError'
-import { type INotificationChannel } from '../domain/interfaces/INotificationChannel'
-import { type Notification } from '../domain/entities/Notification'
+import { type Result, ok } from "../domain/result/Result";
+import { type DomainError } from "../domain/errors/DomainError";
+import { type INotificationChannel } from "../domain/interfaces/INotificationChannel";
+import { type Notification } from "../domain/entities/Notification";
 
 /**
  * InAppChannel — marks a notification as delivered in-app.
@@ -17,15 +17,15 @@ import { type Notification } from '../domain/entities/Notification'
  * changing NotificationService (Open/Closed Principle).
  */
 export class InAppChannel implements INotificationChannel {
-  readonly name = 'in-app' as const
+	readonly name = "in-app" as const;
 
-  isAvailable(): boolean {
-    return true
-  }
+	isAvailable(): boolean {
+		return true;
+	}
 
-  async send(_notification: Notification): Promise<Result<void, DomainError>> {
-    // Notification is already persisted — polling-based delivery is implicit.
-    // No external call needed.
-    return ok(undefined)
-  }
+	async send(_notification: Notification): Promise<Result<void, DomainError>> {
+		// Notification is already persisted — polling-based delivery is implicit.
+		// No external call needed.
+		return ok(undefined);
+	}
 }

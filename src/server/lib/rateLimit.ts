@@ -9,14 +9,14 @@
  */
 
 interface WindowEntry {
-  count: number
-  resetAt: number
+	count: number;
+	resetAt: number;
 }
 
-const store = new Map<string, WindowEntry>()
+const store = new Map<string, WindowEntry>();
 
-const MAX = Number(process.env['RATE_LIMIT_MAX'] ?? 20)
-const WINDOW_MS = Number(process.env['RATE_LIMIT_WINDOW_S'] ?? 60) * 1_000
+const MAX = Number(process.env["RATE_LIMIT_MAX"] ?? 20);
+const WINDOW_MS = Number(process.env["RATE_LIMIT_WINDOW_S"] ?? 60) * 1_000;
 
 /**
  * Returns `true` when the caller has exceeded the rate limit.
@@ -24,37 +24,37 @@ const WINDOW_MS = Number(process.env['RATE_LIMIT_WINDOW_S'] ?? 60) * 1_000
  * @param key  Identifies the caller (e.g. `req.headers['x-forwarded-for']`)
  */
 export function isRateLimited(key: string): boolean {
-  const now = Date.now()
-  const entry = store.get(key)
+	const now = Date.now();
+	const entry = store.get(key);
 
-  if (!entry || now >= entry.resetAt) {
-    store.set(key, { count: 1, resetAt: now + WINDOW_MS })
-    return false
-  }
+	if (!entry || now >= entry.resetAt) {
+		store.set(key, { count: 1, resetAt: now + WINDOW_MS });
+		return false;
+	}
 
-  entry.count += 1
+	entry.count += 1;
 
-  if (entry.count > MAX) {
-    return true
-  }
+	if (entry.count > MAX) {
+		return true;
+	}
 
-  return false
+	return false;
 }
 
 /** Expose current window state — useful for tests and Retry-After headers. */
 export function getRateLimitState(key: string): {
-  remaining: number
-  resetAt: number
+	remaining: number;
+	resetAt: number;
 } {
-  const now = Date.now()
-  const entry = store.get(key)
+	const now = Date.now();
+	const entry = store.get(key);
 
-  if (!entry || now >= entry.resetAt) {
-    return { remaining: MAX, resetAt: now + WINDOW_MS }
-  }
+	if (!entry || now >= entry.resetAt) {
+		return { remaining: MAX, resetAt: now + WINDOW_MS };
+	}
 
-  return {
-    remaining: Math.max(0, MAX - entry.count),
-    resetAt: entry.resetAt,
-  }
+	return {
+		remaining: Math.max(0, MAX - entry.count),
+		resetAt: entry.resetAt,
+	};
 }

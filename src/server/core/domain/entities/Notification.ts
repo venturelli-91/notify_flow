@@ -6,19 +6,19 @@
  * the entire application (API, repository, channels, UI).
  */
 
-export type NotificationChannel = 'email' | 'webhook' | 'in-app'
-export type NotificationStatus = 'pending' | 'sent' | 'failed'
+export type NotificationChannel = "email" | "webhook" | "in-app";
+export type NotificationStatus = "pending" | "sent" | "failed";
 
 export interface Notification {
-  readonly id: string
-  readonly title: string
-  readonly body: string
-  readonly channel: NotificationChannel
-  readonly status: NotificationStatus
-  readonly metadata: Record<string, unknown> | null
-  readonly correlationId: string | null
-  readonly createdAt: Date
-  readonly updatedAt: Date
+	readonly id: string;
+	readonly title: string;
+	readonly body: string;
+	readonly channel: NotificationChannel;
+	readonly status: NotificationStatus;
+	readonly metadata: Record<string, unknown> | null;
+	readonly correlationId: string | null;
+	readonly createdAt: Date;
+	readonly updatedAt: Date;
 }
 
 /**
@@ -26,9 +26,9 @@ export interface Notification {
  * `id`, `status`, `createdAt` and `updatedAt` are assigned by the repository.
  */
 export interface CreateNotificationInput {
-  readonly title: string
-  readonly body: string
-  readonly channel: NotificationChannel
-  readonly metadata?: Record<string, unknown>
-  readonly correlationId?: string
+	readonly title: string;
+	readonly body: string;
+	readonly channel: NotificationChannel;
+	readonly metadata?: Record<string, unknown>;
+	readonly correlationId?: string;
 }
