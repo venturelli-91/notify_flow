@@ -51,10 +51,20 @@ export class EmailChannel implements INotificationChannel {
 			return fail(new ChannelUnavailable(this.name));
 		}
 
+		const to = notification.metadata?.["to"];
+		if (typeof to !== "string" || to.trim().length === 0) {
+			return fail(
+				new ChannelUnavailable(
+					this.name,
+					'metadata.to must be a non-empty string (recipient email address)',
+				),
+			);
+		}
+
 		try {
 			await this.transporter.sendMail({
 				from: this.config.from,
-				to: notification.metadata?.to as string | undefined,
+				to,
 				subject: notification.title,
 				text: notification.body,
 			});
