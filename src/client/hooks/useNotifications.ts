@@ -20,15 +20,20 @@ async function fetchNotifications(): Promise<Notification[]> {
 	return json.data;
 }
 
-async function sendNotification(payload: SendPayload): Promise<Notification> {
+/** Returned by POST /api/notifications (202 Accepted — job was enqueued). */
+type EnqueuedJob = {
+	readonly jobId: string | undefined;
+	readonly correlationId: string;
+};
+
+async function sendNotification(payload: SendPayload): Promise<EnqueuedJob> {
 	const res = await fetch("/api/notifications", {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify(payload),
 	});
 	if (!res.ok) throw new Error("Failed to send notification");
-	const json = (await res.json()) as { data: Notification };
-	return json.data;
+	return (await res.json()) as EnqueuedJob;
 }
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
