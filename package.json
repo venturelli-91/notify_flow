@@ -3,10 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "postinstall": "prisma generate",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "worker": "tsx --tsconfig tsconfig.json src/server/workers/notificationWorker.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:unit": "vitest run src/tests/unit",
