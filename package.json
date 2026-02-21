@@ -14,6 +14,7 @@
     "bullmq": "^5.70.0",
     "ioredis": "^5.9.3",
     "next": "14.2.35",
+    "nodemailer": "^8.0.1",
     "react": "^18",
     "react-dom": "^18",
     "zod": "^4.3.6"
@@ -24,6 +25,7 @@
     "@testing-library/user-event": "^14.6.1",
     "@types/ioredis": "^4.28.10",
     "@types/node": "^20",
+    "@types/nodemailer": "^7.0.11",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@vitejs/plugin-react": "^5.1.4",
