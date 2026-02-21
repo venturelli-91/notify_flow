@@ -1,6 +1,7 @@
 import type {
 	PrismaClient,
 	Notification as PrismaNotification,
+	Prisma,
 } from "@prisma/client";
 import { type Result, ok, fail } from "../domain/result/Result";
 import { type DomainError } from "../domain/errors/DomainError";
@@ -66,7 +67,7 @@ export class PrismaNotificationRepository
 					body: input.body,
 					channel: input.channel,
 					status: "pending",
-					metadata: input.metadata ?? undefined,
+					metadata: input.metadata as Prisma.InputJsonValue | undefined,
 					correlationId: input.correlationId ?? null,
 				},
 			});
