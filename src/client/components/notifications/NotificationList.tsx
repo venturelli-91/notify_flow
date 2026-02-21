@@ -1,8 +1,7 @@
 "use client";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { useNotifications } from "@client/hooks/useNotifications";
 import { NotificationCard } from "@client/components/notifications/NotificationCard";
 
@@ -16,7 +15,7 @@ export function NotificationListSkeleton() {
 			{Array.from({ length: 3 }).map((_, i) => (
 				<li key={i}>
 					<Card>
-						<CardHeader>
+						<CardContent className="pt-6">
 							<div className="flex items-start justify-between">
 								<div className="flex-1 space-y-2">
 									<Skeleton className="h-5 w-3/4" />
@@ -24,10 +23,6 @@ export function NotificationListSkeleton() {
 								</div>
 								<Skeleton className="h-6 w-20" />
 							</div>
-						</CardHeader>
-						<CardContent>
-							<Skeleton className="h-4 w-full" />
-							<Skeleton className="mt-2 h-4 w-4/5" />
 						</CardContent>
 					</Card>
 				</li>

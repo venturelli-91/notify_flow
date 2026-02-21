@@ -1,15 +1,21 @@
 import type { Notification } from "@server/core/domain/entities/Notification";
-import { Badge } from "@client/components/ui/Badge";
-import { Card } from "@client/components/ui/Card";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface NotificationCardProps {
 	readonly notification: Notification;
 }
 
 const channelLabel: Record<string, string> = {
-	email: "Email",
-	webhook: "Webhook",
-	"in-app": "In-App",
+	email: "📧 Email",
+	webhook: "🔗 Webhook",
+	"in-app": "📱 In-App",
+};
+
+const statusColors: Record<string, string> = {
+	pending: "bg-yellow-100 text-yellow-800",
+	sent: "bg-green-100 text-green-800",
+	failed: "bg-red-100 text-red-800",
 };
 
 /**
@@ -20,40 +26,39 @@ const channelLabel: Record<string, string> = {
  */
 export function NotificationCard({ notification }: NotificationCardProps) {
 	return (
-		<Card>
-			<div className="flex items-start justify-between gap-4">
-				<div className="min-w-0 flex-1">
-					<p className="truncate font-medium text-gray-900">
-						{notification.title}
-					</p>
-					<p className="mt-1 line-clamp-2 text-sm text-gray-500">
-						{notification.body}
-					</p>
+		<Card className="hover:shadow-md transition-shadow">
+			<CardContent className="pt-6">
+				<div className="flex items-start justify-between gap-4">
+					<div className="min-w-0 flex-1">
+						<p className="truncate font-semibold text-gray-900">
+							{notification.title}
+						</p>
+						<p className="mt-2 line-clamp-2 text-sm text-gray-600">
+							{notification.body}
+						</p>
+					</div>
+					<Badge
+						className={`whitespace-nowrap ${statusColors[notification.status]}`}>
+						{notification.status === "pending" && "⏳ Pending"}
+						{notification.status === "sent" && "✓ Sent"}
+						{notification.status === "failed" && "✗ Failed"}
+					</Badge>
 				</div>
-				<Badge status={notification.status} />
-			</div>
 
-			<div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-400">
-				<span>{channelLabel[notification.channel] ?? notification.channel}</span>
-				<span aria-hidden>·</span>
-				<span>
-					{new Date(notification.createdAt).toLocaleString(undefined, {
-						dateStyle: "medium",
-						timeStyle: "short",
-					})}
-				</span>
-				{notification.correlationId && (
-					<>
-						<span aria-hidden>·</span>
+				<div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-500">
+					<span>
+						{channelLabel[notification.channel] ?? notification.channel}
+					</span>
+					<span>{new Date(notification.createdAt).toLocaleString()}</span>
+					{notification.correlationId && (
 						<span
-							className="max-w-[140px] truncate font-mono"
-							title={notification.correlationId}
-						>
-							{notification.correlationId}
+							className="font-mono text-gray-400"
+							title={notification.correlationId}>
+							#{notification.correlationId.slice(0, 8)}
 						</span>
-					</>
-				)}
-			</div>
+					)}
+				</div>
+			</CardContent>
 		</Card>
 	);
 }
