@@ -1,4 +1,5 @@
 import Redis from "ioredis";
+import { logger } from "./logger";
 
 /**
  * Redis singleton — reuses the same connection across hot-reloads
@@ -25,14 +26,9 @@ function createRedisClient(): Redis {
 	client.on("error", (err: unknown) => {
 		// Log but don't crash — BullMQ and rate limiter will surface errors
 		// through their own Result<> paths.
-		console.error(
-			JSON.stringify({
-				level: "error",
-				message: "Redis client error",
-				error: err instanceof Error ? err.message : String(err),
-				timestamp: new Date().toISOString(),
-			}),
-		);
+		logger.error("Redis client error", {
+			error: err instanceof Error ? err.message : String(err),
+		});
 	});
 
 	return client;
