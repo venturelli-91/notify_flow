@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { notificationService } from "@server/lib/container";
+import { notificationQueue } from "@server/lib/queue";
 import { withCorrelationId, getCorrelationId } from "@server/lib/correlationId";
 import { logger } from "@server/lib/logger";
 import { isRateLimited, getRateLimitState } from "@server/lib/rateLimit";
@@ -20,6 +21,23 @@ function clientIp(req: NextRequest): string {
 	return (
 		req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "anonymous"
 	);
+}
+
+/**
+ * Returns a 401 response when the API_KEY env var is set and the request
+ * does not present a matching Bearer token. Returns null when auth passes.
+ *
+ * When API_KEY is unset the guard is disabled — useful for local development.
+ */
+function checkApiKey(req: NextRequest): NextResponse | null {
+	const apiKey = process.env["API_KEY"];
+	if (!apiKey) return null; // auth disabled
+
+	const auth = req.headers.get("authorization");
+	if (auth !== `Bearer ${apiKey}`) {
+		return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
+	}
+	return null;
 }
 
 // ── GET /api/notifications ────────────────────────────────────────────────────
@@ -60,6 +78,13 @@ export async function POST(req: NextRequest) {
 
 		logger.info("POST /api/notifications", { ip });
 
+		// Auth
+		const authError = checkApiKey(req);
+		if (authError) {
+			logger.warn("Unauthorized request rejected", { ip });
+			return authError;
+		}
+
 		// Rate limiting
 		if (isRateLimited(ip)) {
 			const { resetAt } = getRateLimitState(ip);
@@ -95,26 +120,23 @@ export async function POST(req: NextRequest) {
 			);
 		}
 
-		// Dispatch
-		const result = await notificationService.send({
-			...parsed.data,
-			correlationId,
-		});
-
-		const ms = Date.now() - start;
-
-		if (!result.ok) {
-			logger.error("Failed to send notification", {
-				error: result.error.message,
-				ms,
+		// Enqueue — the worker calls notificationService.send() asynchronously.
+		let jobId: string | undefined;
+		try {
+			const job = await notificationQueue.add("send", {
+				...parsed.data,
+				correlationId,
 			});
-			return NextResponse.json(
-				{ error: result.error.code },
-				{ status: result.error.statusCode },
-			);
+			jobId = job.id;
+		} catch (err) {
+			const msg = err instanceof Error ? err.message : "Queue unavailable";
+			logger.error("Failed to enqueue notification", { error: msg, ip });
+			return NextResponse.json({ error: "QUEUE_UNAVAILABLE" }, { status: 503 });
 		}
 
-		logger.info("Notification sent", { id: result.value.id, ms });
-		return NextResponse.json({ data: result.value, correlationId }, { status: 201 });
+		const ms = Date.now() - start;
+		logger.info("Notification enqueued", { jobId, ms });
+
+		return NextResponse.json({ jobId, correlationId }, { status: 202 });
 	});
 }
