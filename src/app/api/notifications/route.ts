@@ -11,7 +11,7 @@ const SendNotificationSchema = z.object({
 	title: z.string().min(1).max(100),
 	body: z.string().min(1).max(1000),
 	channel: z.enum(["email", "webhook", "in-app"]),
-	metadata: z.record(z.unknown()).optional(),
+	metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
