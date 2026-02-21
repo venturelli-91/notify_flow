@@ -131,8 +131,8 @@ export async function POST(req: NextRequest) {
 		}
 
 		// Rate limiting
-		if (isRateLimited(ip)) {
-			const { resetAt } = getRateLimitState(ip);
+		if (await isRateLimited(ip)) {
+			const { resetAt } = await getRateLimitState(ip);
 			logger.warn("Rate limit exceeded", { ip, resetAt });
 			return NextResponse.json(
 				{ error: "RATE_LIMIT_EXCEEDED" },
