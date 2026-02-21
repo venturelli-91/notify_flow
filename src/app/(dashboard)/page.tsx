@@ -1,12 +1,17 @@
+import { Suspense } from "react";
 import Link from "next/link";
-import { NotificationList } from "@client/components/notifications/NotificationList";
+import {
+	NotificationList,
+	NotificationListSkeleton,
+} from "@client/components/notifications/NotificationList";
 import { Button } from "@client/components/ui/Button";
 
 /**
  * Dashboard — Server Component root.
  *
- * Renders the notification feed via <NotificationList> (client component).
- * This file itself stays server-side: no hooks, no "use client".
+ * <Suspense> wraps the client-component feed so that the page shell
+ * (header, nav) streams immediately while the list hydrates on the client.
+ * The skeleton fallback matches the final layout, preventing CLS.
  */
 export default function DashboardPage() {
 	return (
@@ -30,7 +35,9 @@ export default function DashboardPage() {
 				<h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-400">
 					Recent notifications
 				</h2>
-				<NotificationList />
+				<Suspense fallback={<NotificationListSkeleton />}>
+					<NotificationList />
+				</Suspense>
 			</section>
 		</div>
 	);
