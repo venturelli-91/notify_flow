@@ -1,8 +1,10 @@
 "use client";
 
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useNotifications } from "@client/hooks/useNotifications";
 import { NotificationCard } from "@client/components/notifications/NotificationCard";
-import { Card } from "@client/components/ui/Card";
 
 /**
  * NotificationListSkeleton — exported so that page.tsx can use it as the
@@ -13,14 +15,20 @@ export function NotificationListSkeleton() {
 		<ul className="space-y-3" aria-label="Loading notifications">
 			{Array.from({ length: 3 }).map((_, i) => (
 				<li key={i}>
-					<Card className="animate-pulse">
-						<div className="flex items-start justify-between gap-4">
-							<div className="flex-1 space-y-2">
-								<div className="h-4 w-3/4 rounded bg-gray-200" />
-								<div className="h-3 w-1/2 rounded bg-gray-200" />
+					<Card>
+						<CardHeader>
+							<div className="flex items-start justify-between">
+								<div className="flex-1 space-y-2">
+									<Skeleton className="h-5 w-3/4" />
+									<Skeleton className="h-3 w-1/2" />
+								</div>
+								<Skeleton className="h-6 w-20" />
 							</div>
-							<div className="h-5 w-14 rounded-full bg-gray-200" />
-						</div>
+						</CardHeader>
+						<CardContent>
+							<Skeleton className="h-4 w-full" />
+							<Skeleton className="mt-2 h-4 w-4/5" />
+						</CardContent>
 					</Card>
 				</li>
 			))}
@@ -48,8 +56,10 @@ export function NotificationList() {
 
 	if (query.isError) {
 		return (
-			<Card className="text-center text-sm text-red-600">
-				Failed to load notifications. Please try again later.
+			<Card className="border-red-200 bg-red-50">
+				<CardContent className="pt-6 text-sm text-red-700">
+					Failed to load notifications. Please try again later.
+				</CardContent>
 			</Card>
 		);
 	}
@@ -58,8 +68,13 @@ export function NotificationList() {
 
 	if (notifications.length === 0) {
 		return (
-			<Card className="text-center text-sm text-gray-400">
-				No notifications yet. Send one to get started.
+			<Card className="border-gray-200 bg-gray-50">
+				<CardContent className="pt-6 text-center text-sm text-gray-600">
+					<p className="font-medium">No notifications yet</p>
+					<p className="mt-1 text-xs text-gray-500">
+						Send your first notification to get started.
+					</p>
+				</CardContent>
 			</Card>
 		);
 	}
