@@ -82,16 +82,17 @@ export class WebhookChannel implements INotificationChannel {
 			if (!response.ok) {
 				return fail(
 					new ChannelUnavailable(
-						`${this.name}: target responded with ${response.status}`,
+						this.name,
+						`target responded with ${response.status}`,
 					),
 				);
 			}
 
 			return ok(undefined);
 		} catch (err) {
-			const message =
+			const reason =
 				err instanceof Error ? err.message : "Webhook delivery failed";
-			return fail(new ChannelUnavailable(`${this.name}: ${message}`));
+			return fail(new ChannelUnavailable(this.name, reason));
 		}
 	}
 }

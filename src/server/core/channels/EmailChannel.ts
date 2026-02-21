@@ -60,9 +60,9 @@ export class EmailChannel implements INotificationChannel {
 			});
 			return ok(undefined);
 		} catch (err) {
-			const message =
+			const reason =
 				err instanceof Error ? err.message : "SMTP delivery failed";
-			return fail(new ChannelUnavailable(`${this.name}: ${message}`));
+			return fail(new ChannelUnavailable(this.name, reason));
 		}
 	}
 }

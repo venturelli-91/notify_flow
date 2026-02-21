@@ -14,14 +14,21 @@ export class NotificationNotFound extends DomainError {
 
 /**
  * Thrown when the requested delivery channel is not available
- * (e.g. missing config, external service unreachable).
+ * (e.g. missing config, external service unreachable, delivery failed).
+ *
+ * @param channelName - canonical channel identifier ("email", "webhook", …)
+ * @param reason      - optional human-readable failure detail
  */
 export class ChannelUnavailable extends DomainError {
 	readonly code = "CHANNEL_UNAVAILABLE" as const;
 	readonly statusCode = 503;
 
-	constructor(channelName: string) {
-		super(`Channel "${channelName}" is not available.`);
+	constructor(channelName: string, reason?: string) {
+		super(
+			reason
+				? `Channel "${channelName}" is not available: ${reason}`
+				: `Channel "${channelName}" is not available.`,
+		);
 	}
 }
 
