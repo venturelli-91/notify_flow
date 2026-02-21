@@ -61,3 +61,17 @@ export class TemplateMissingVariable extends DomainError {
     super(`Template variable "{{${variable}}}" is missing from context.`)
   }
 }
+
+/**
+ * Wraps an unexpected infrastructure error (e.g. database unreachable).
+ * statusCode 500 — never expose raw DB errors to the client.
+ */
+export class DatabaseError extends DomainError {
+  readonly code = 'DATABASE_ERROR' as const
+  readonly statusCode = 500
+
+  constructor(cause: unknown) {
+    const message = cause instanceof Error ? cause.message : 'Unexpected database error'
+    super(message)
+  }
+}
