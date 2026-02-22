@@ -1,44 +1,41 @@
 import { Suspense } from "react";
-import Link from "next/link";
 import {
 	NotificationList,
 	NotificationListSkeleton,
 } from "@client/components/notifications/NotificationList";
-import { Button } from "@client/components/ui/Button";
+import { NotificationPageMeta } from "@client/components/notifications/NotificationPageMeta";
+import { TopBar } from "@client/components/TopBar";
 
-/**
- * Dashboard — Server Component root.
- *
- * <Suspense> wraps the client-component feed so that the page shell
- * (header, nav) streams immediately while the list hydrates on the client.
- * The skeleton fallback matches the final layout, preventing CLS.
- */
 export default function DashboardPage() {
 	return (
-		<div className="mx-auto max-w-2xl px-4 py-10">
-			<header className="flex items-start justify-between">
-				<div>
-					<h1 className="text-2xl font-bold tracking-tight text-gray-900">
-						NotifyFlow
+		<div className="flex flex-col min-h-full">
+			<TopBar />
+
+			{/* Cartão branco principal */}
+			<div className="flex-1 bg-white rounded-2xl shadow-sm px-8 py-7">
+				{/* Cabeçalho da página */}
+				<div className="flex items-start justify-between mb-1">
+					<h1 className="text-[22px] font-bold text-gray-900 leading-tight">
+						Notifications
 					</h1>
-					<p className="mt-1 text-sm text-gray-500">
-						Self-hosted multi-channel notification engine
-					</p>
+					<button
+						type="button"
+						className="text-[13px] font-medium text-gray-700 border border-gray-300 rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors flex-shrink-0"
+					>
+						Mark all as Read
+					</button>
 				</div>
 
-				<Link href="/send">
-					<Button>Send notification</Button>
-				</Link>
-			</header>
+				{/* Subtítulo dinâmico com contagem */}
+				<Suspense fallback={<p className="mt-1 mb-6 text-sm text-gray-500">Loading…</p>}>
+					<NotificationPageMeta />
+				</Suspense>
 
-			<section className="mt-10">
-				<h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-400">
-					Recent notifications
-				</h2>
+				{/* Lista agrupada por data */}
 				<Suspense fallback={<NotificationListSkeleton />}>
 					<NotificationList />
 				</Suspense>
-			</section>
+			</div>
 		</div>
 	);
 }
