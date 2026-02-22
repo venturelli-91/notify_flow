@@ -73,4 +73,12 @@ export class NotificationService {
 	async findById(id: string): Promise<Result<Notification, DomainError>> {
 		return this.reader.findById(id);
 	}
+
+	async markAllRead(): Promise<Result<void, DomainError>> {
+		return this.writer.markAllRead();
+	}
+
+	async markAllUnread(): Promise<Result<void, DomainError>> {
+		return this.writer.markAllUnread();
+	}
 }

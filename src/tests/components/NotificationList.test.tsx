@@ -85,7 +85,7 @@ describe("NotificationList", () => {
 		).toBeInTheDocument();
 	});
 
-	it("shows pulsing badge for optimistic (pending) entries", async () => {
+	it("shows pulsing indicator for optimistic (pending) entries", async () => {
 		const optimistic = makeNotification({
 			id: "optimistic-1234",
 			title: "Sending…",
@@ -96,9 +96,9 @@ describe("NotificationList", () => {
 		renderWithProviders(<NotificationList />);
 
 		await waitFor(() => {
-			const badge = screen.getByText("Pending");
-			expect(badge).toBeInTheDocument();
-			expect(badge.className).toContain("animate-pulse");
+			const dot = screen.getByTitle("pending");
+			expect(dot).toBeInTheDocument();
+			expect(dot.className).toContain("animate-pulse");
 		});
 	});
 });

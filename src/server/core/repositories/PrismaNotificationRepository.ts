@@ -91,6 +91,30 @@ export class PrismaNotificationRepository
 			return fail(new DatabaseError(err));
 		}
 	}
+
+	async markAllRead(): Promise<Result<void, DomainError>> {
+		try {
+			await this.prisma.notification.updateMany({
+				where: { readAt: null },
+				data: { readAt: new Date() },
+			});
+			return ok(undefined);
+		} catch (err) {
+			return fail(new DatabaseError(err));
+		}
+	}
+
+	async markAllUnread(): Promise<Result<void, DomainError>> {
+		try {
+			await this.prisma.notification.updateMany({
+				where: { readAt: { not: null } },
+				data: { readAt: null },
+			});
+			return ok(undefined);
+		} catch (err) {
+			return fail(new DatabaseError(err));
+		}
+	}
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -102,6 +126,7 @@ function toDomain(row: PrismaNotification): Notification {
 		body: row.body,
 		channel: row.channel as NotificationChannel,
 		status: row.status as NotificationStatus,
+		readAt: row.readAt,
 		metadata: row.metadata as Record<string, unknown> | null,
 		correlationId: row.correlationId,
 		createdAt: row.createdAt,

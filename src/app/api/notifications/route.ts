@@ -113,6 +113,45 @@ export async function GET(req: NextRequest) {
 	});
 }
 
+// ── PATCH /api/notifications ──────────────────────────────────────────────────
+
+const BulkActionSchema = z.object({
+	action: z.enum(["mark_all_read", "mark_all_unread"]),
+});
+
+export async function PATCH(req: NextRequest) {
+	return withCorrelationId(req.headers.get("x-correlation-id"), async () => {
+		const authError = checkApiKey(req);
+		if (authError) return authError;
+
+		let body: unknown;
+		try {
+			body = await req.json();
+		} catch {
+			return NextResponse.json({ error: "INVALID_JSON" }, { status: 400 });
+		}
+
+		const parsed = BulkActionSchema.safeParse(body);
+		if (!parsed.success) {
+			return NextResponse.json({ error: "INVALID_PAYLOAD" }, { status: 422 });
+		}
+
+		const result =
+			parsed.data.action === "mark_all_read"
+				? await notificationService.markAllRead()
+				: await notificationService.markAllUnread();
+
+		if (!result.ok) {
+			return NextResponse.json(
+				{ error: result.error.code },
+				{ status: result.error.statusCode },
+			);
+		}
+
+		return NextResponse.json({ ok: true });
+	});
+}
+
 // ── POST /api/notifications ───────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {

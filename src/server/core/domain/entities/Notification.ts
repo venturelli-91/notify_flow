@@ -15,6 +15,7 @@ export interface Notification {
 	readonly body: string;
 	readonly channel: NotificationChannel;
 	readonly status: NotificationStatus;
+	readonly readAt: Date | null;
 	readonly metadata: Record<string, unknown> | null;
 	readonly correlationId: string | null;
 	readonly createdAt: Date;

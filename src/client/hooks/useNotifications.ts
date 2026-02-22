@@ -76,6 +76,7 @@ export function useNotifications() {
 				body: payload.body,
 				channel: payload.channel,
 				status: "pending",
+				readAt: null,
 				metadata: payload.metadata ?? null,
 				correlationId: null,
 				createdAt: new Date(),

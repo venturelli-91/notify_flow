@@ -16,7 +16,8 @@ model Notification {
   title         String
   body          String
   channel       String   // "email" | "webhook" | "in-app"
-  status        String   @default("pending") // "pending" | "sent" | "failed"
+  status        String    @default("pending") // "pending" | "sent" | "failed"
+  readAt        DateTime?
   metadata      Json?
   correlationId String?
   createdAt     DateTime @default(now())

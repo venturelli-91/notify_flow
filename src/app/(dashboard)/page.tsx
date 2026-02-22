@@ -4,6 +4,7 @@ import {
 	NotificationListSkeleton,
 } from "@client/components/notifications/NotificationList";
 import { NotificationPageMeta } from "@client/components/notifications/NotificationPageMeta";
+import { NotificationActions } from "@client/components/notifications/NotificationActions";
 import { TopBar } from "@client/components/TopBar";
 
 export default function DashboardPage() {
@@ -18,12 +19,7 @@ export default function DashboardPage() {
 					<h1 className="text-[22px] font-bold text-gray-900 leading-tight">
 						Notifications
 					</h1>
-					<button
-						type="button"
-						className="text-[13px] font-medium text-gray-700 border border-gray-300 rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors flex-shrink-0"
-					>
-						Mark all as Read
-					</button>
+					<NotificationActions />
 				</div>
 
 				{/* Subtítulo dinâmico com contagem */}

@@ -19,4 +19,7 @@ export interface INotificationWriter {
 		id: string,
 		status: NotificationStatus,
 	): Promise<Result<Notification, DomainError>>;
+
+	markAllRead(): Promise<Result<void, DomainError>>;
+	markAllUnread(): Promise<Result<void, DomainError>>;
 }
