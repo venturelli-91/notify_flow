@@ -1,3 +1,8 @@
+"use client";
+
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@client/lib/queryKeys";
 import type { Notification } from "@server/core/domain/entities/Notification";
 
 interface NotificationCardProps {
@@ -77,6 +82,38 @@ const fallback = {
 	),
 };
 
+// ── Action icons ──────────────────────────────────────────────────────────────
+
+function RetryIcon() {
+	return (
+		<svg
+			className="h-4 w-4"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="2"
+			strokeLinecap="round"
+			strokeLinejoin="round">
+			<path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
+		</svg>
+	);
+}
+
+function DeleteIcon() {
+	return (
+		<svg
+			className="h-4 w-4"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="2"
+			strokeLinecap="round"
+			strokeLinejoin="round">
+			<path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14zM10 11v6M14 11v6" />
+		</svg>
+	);
+}
+
 // ── Time ──────────────────────────────────────────────────────────────────────
 
 function relativeTime(date: Date): string {
@@ -107,6 +144,36 @@ export function NotificationCard({ notification }: NotificationCardProps) {
 	const ch = channelConfig[notification.channel] ?? fallback;
 	const time = relativeTime(new Date(notification.createdAt));
 	const status = statusConfig[notification.status] ?? statusConfig.pending;
+	const queryClient = useQueryClient();
+
+	const canRetry = notification.status === "pending" || notification.status === "failed";
+
+	const retryMutation = useMutation({
+		mutationFn: async () => {
+			const res = await fetch(`/api/notifications/${notification.id}/retry`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+			});
+			if (!res.ok) throw new Error("Failed to retry notification");
+		},
+		onSettled: () =>
+			void queryClient.invalidateQueries({
+				queryKey: queryKeys.notifications.list(),
+			}),
+	});
+
+	const deleteMutation = useMutation({
+		mutationFn: async () => {
+			const res = await fetch(`/api/notifications/${notification.id}`, {
+				method: "DELETE",
+			});
+			if (!res.ok) throw new Error("Failed to delete notification");
+		},
+		onSettled: () =>
+			void queryClient.invalidateQueries({
+				queryKey: queryKeys.notifications.list(),
+			}),
+	});
 
 	return (
 		<div
@@ -131,11 +198,35 @@ export function NotificationCard({ notification }: NotificationCardProps) {
 				</p>
 			</div>
 
-			{/* Status badge */}
-			<span
-				className={`flex-shrink-0 text-[11px] font-semibold px-2.5 py-1 rounded-full ${status.className}`}>
-				{status.label}
-			</span>
+			{/* Status badge + Actions */}
+			<div className="flex items-center gap-2 flex-shrink-0">
+				<span
+					className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${status.className}`}>
+					{status.label}
+				</span>
+
+				{canRetry && (
+					<button
+						type="button"
+						onClick={() => retryMutation.mutate()}
+						disabled={retryMutation.isPending || deleteMutation.isPending}
+						className="p-1.5 text-gray-500 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-colors disabled:opacity-50"
+						title="Retry notification">
+						<RetryIcon />
+					</button>
+				)}
+
+				{canRetry && (
+					<button
+						type="button"
+						onClick={() => deleteMutation.mutate()}
+						disabled={deleteMutation.isPending || retryMutation.isPending}
+						className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+						title="Delete notification">
+						<DeleteIcon />
+					</button>
+				)}
+			</div>
 		</div>
 	);
 }

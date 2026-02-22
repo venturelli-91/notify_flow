@@ -87,4 +87,13 @@ export class NotificationService {
 	async markAllUnread(): Promise<Result<void, DomainError>> {
 		return this.writer.markAllUnread();
 	}
+
+	async retry(id: string): Promise<Result<Notification, DomainError>> {
+		return this.writer.updateStatus(id, "pending");
+	}
+
+	async softDelete(id: string): Promise<Result<Notification, DomainError>> {
+		// Mark as failed and archived for deletion
+		return this.writer.updateStatus(id, "failed");
+	}
 }
