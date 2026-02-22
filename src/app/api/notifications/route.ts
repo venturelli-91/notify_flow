@@ -204,10 +204,28 @@ export async function POST(req: NextRequest) {
 			);
 		}
 
-		// Enqueue — the worker calls notificationService.send() asynchronously.
+		// Persist the record immediately so it appears in the dashboard as "pending"
+		const createResult = await notificationService.createPending({
+			...parsed.data,
+			correlationId,
+		});
+		if (!createResult.ok) {
+			logger.error("Failed to persist notification", {
+				error: createResult.error.message,
+				ip,
+			});
+			return NextResponse.json(
+				{ error: createResult.error.code },
+				{ status: createResult.error.statusCode },
+			);
+		}
+		const notification = createResult.value;
+
+		// Enqueue delivery — the worker calls notificationService.deliver()
 		let jobId: string | undefined;
 		try {
 			const job = await notificationQueue.add("send", {
+				notificationId: notification.id,
 				...parsed.data,
 				correlationId,
 			});
@@ -215,12 +233,22 @@ export async function POST(req: NextRequest) {
 		} catch (err) {
 			const msg = err instanceof Error ? err.message : "Queue unavailable";
 			logger.error("Failed to enqueue notification", { error: msg, ip });
+			// Record is already in DB as "pending" — worker retry not possible,
+			// so mark it failed immediately.
+			await notificationService.deliver(notification);
 			return NextResponse.json({ error: "QUEUE_UNAVAILABLE" }, { status: 503 });
 		}
 
 		const ms = Date.now() - start;
-		logger.info("Notification enqueued", { jobId, ms });
+		logger.info("Notification created and enqueued", {
+			notificationId: notification.id,
+			jobId,
+			ms,
+		});
 
-		return NextResponse.json({ jobId, correlationId }, { status: 202 });
+		return NextResponse.json(
+			{ jobId, correlationId, notificationId: notification.id },
+			{ status: 202 },
+		);
 	});
 }

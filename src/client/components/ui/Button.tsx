@@ -17,7 +17,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
  */
 const variantStyles: Record<Variant, string> = {
 	primary:
-		"bg-blue-600 text-white hover:bg-blue-700 focus-visible:ring-blue-500",
+		"bg-violet-600 text-white hover:bg-violet-700 focus-visible:ring-violet-500",
 	secondary:
 		"bg-gray-100 text-gray-800 hover:bg-gray-200 focus-visible:ring-gray-400",
 	danger: "bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500",
@@ -48,8 +48,7 @@ export function Button({
 				variantStyles[variant],
 				sizeStyles[size],
 				className,
-			].join(" ")}
-		>
+			].join(" ")}>
 			{isLoading && (
 				<span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
 			)}

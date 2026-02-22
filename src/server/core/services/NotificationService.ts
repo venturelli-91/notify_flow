@@ -26,44 +26,50 @@ export class NotificationService {
 	) {}
 
 	/**
-	 * Create and dispatch a notification through the requested channel.
-	 * Persists the record, attempts delivery, then updates the final status.
+	 * Persist a notification with status "pending" — no delivery attempted.
+	 * Called by the API route so the record is immediately visible in the dashboard.
 	 */
-	async send(
+	async createPending(
 		input: CreateNotificationInput,
 	): Promise<Result<Notification, DomainError>> {
-		// 1. Persist with initial status "pending"
-		const createResult = await this.writer.create(input);
-		if (!createResult.ok) return createResult;
+		return this.writer.create(input);
+	}
 
-		const notification = createResult.value;
-
-		// 2. Resolve the requested channel
-		const channel = this.channels.find((c) => c.name === input.channel);
+	/**
+	 * Dispatch an already-persisted notification through its channel and update
+	 * the final status. Called by the worker after dequeueing the job.
+	 */
+	async deliver(
+		notification: Notification,
+	): Promise<Result<Notification, DomainError>> {
+		const channel = this.channels.find((c) => c.name === notification.channel);
 		if (!channel) {
-			return fail(new ChannelUnavailable(input.channel));
+			await this.writer.updateStatus(notification.id, "failed");
+			return fail(new ChannelUnavailable(notification.channel));
 		}
 
-		// 3. Guard: channel must be available before attempting delivery
 		if (!channel.isAvailable()) {
 			await this.writer.updateStatus(notification.id, "failed");
 			return fail(new ChannelUnavailable(channel.name));
 		}
 
-		// 4. Attempt delivery
 		const sendResult = await channel.send(notification);
-
-		// 5. Persist final status regardless of outcome
 		const finalStatus = sendResult.ok ? "sent" : "failed";
-		const updateResult = await this.writer.updateStatus(
-			notification.id,
-			finalStatus,
-		);
+		const updateResult = await this.writer.updateStatus(notification.id, finalStatus);
 
 		if (!sendResult.ok) return sendResult;
 		if (!updateResult.ok) return updateResult;
 
 		return ok(updateResult.value);
+	}
+
+	/** @deprecated Use createPending() + deliver() separately. Kept for tests. */
+	async send(
+		input: CreateNotificationInput,
+	): Promise<Result<Notification, DomainError>> {
+		const createResult = await this.createPending(input);
+		if (!createResult.ok) return createResult;
+		return this.deliver(createResult.value);
 	}
 
 	async findAll(): Promise<Result<Notification[], DomainError>> {

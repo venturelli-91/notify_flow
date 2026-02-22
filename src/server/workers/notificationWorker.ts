@@ -6,10 +6,14 @@
  *
  * Responsibilities:
  *   1. Dequeue NotificationJobData from the "notifications" queue.
- *   2. Call notificationService.send() — creates the DB record, dispatches
- *      the channel, and persists the final status.
- *   3. On failure, BullMQ retries up to 3× with exponential back-off
+ *   2. Fetch the already-persisted notification by ID.
+ *   3. Call notificationService.deliver() — dispatches the channel and
+ *      updates the final status ("sent" | "failed").
+ *   4. On failure, BullMQ retries up to 3× with exponential back-off
  *      (configured in queue.ts defaultJobOptions).
+ *
+ * Note: the DB record is created by the API route (status "pending") so
+ * it is immediately visible in the dashboard regardless of worker state.
  *
  * SRP: only the wiring of job data → service call lives here.
  */
@@ -44,23 +48,33 @@ const connection = parseBullMQConnection();
 const worker = new Worker<NotificationJobData>(
 	NOTIFICATION_QUEUE,
 	async (job) => {
-		const { correlationId, ...input } = job.data;
+		const { notificationId, correlationId, channel } = job.data;
 
 		await withCorrelationId(correlationId, async () => {
 			logger.info("Processing notification job", {
 				jobId: job.id,
-				channel: input.channel,
+				notificationId,
+				channel,
 				attempt: job.attemptsMade + 1,
 			});
 
-			const result = await notificationService.send({
-				...input,
-				correlationId,
-			});
+			// Fetch the existing DB record created by the API route
+			const fetchResult = await notificationService.findById(notificationId);
+			if (!fetchResult.ok) {
+				logger.error("Notification not found in DB", {
+					jobId: job.id,
+					notificationId,
+					error: fetchResult.error.message,
+				});
+				throw new Error(fetchResult.error.message);
+			}
+
+			const result = await notificationService.deliver(fetchResult.value);
 
 			if (!result.ok) {
-				logger.error("Notification job failed", {
+				logger.error("Notification delivery failed", {
 					jobId: job.id,
+					notificationId,
 					error: result.error.message,
 					code: result.error.code,
 				});
@@ -68,7 +82,7 @@ const worker = new Worker<NotificationJobData>(
 				throw new Error(result.error.message);
 			}
 
-			logger.info("Notification job succeeded", {
+			logger.info("Notification delivered", {
 				jobId: job.id,
 				notificationId: result.value.id,
 				channel: result.value.channel,

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { useNotifications } from "@client/hooks/useNotifications";
 import { useChannels } from "@client/hooks/useChannels";
 import { Button } from "@client/components/ui/Button";
@@ -11,7 +12,7 @@ import type { NotificationChannel } from "@server/core/domain/entities/Notificat
 
 const inputClass =
 	"mt-1 block w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm" +
-	" focus:border-teal-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-teal-500 transition-colors";
+	" focus:border-violet-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-violet-500 transition-colors";
 
 export default function SendPage() {
 	const router = useRouter();
@@ -21,12 +22,25 @@ export default function SendPage() {
 	const [title, setTitle] = useState("");
 	const [body, setBody] = useState("");
 	const [channel, setChannel] = useState<NotificationChannel>("in-app");
+	const [recipientEmail, setRecipientEmail] = useState("");
 
 	function handleSubmit(e: React.FormEvent) {
 		e.preventDefault();
 		mutation.mutate(
-			{ title, body, channel },
-			{ onSuccess: () => router.push("/") },
+			{
+				title,
+				body,
+				channel,
+				metadata: channel === "email" ? { to: recipientEmail } : undefined,
+			},
+			{
+				onSuccess: () => {
+					toast.success("Notification queued!", {
+						description: `"${title}" was enqueued via ${channel} and will be delivered shortly.`,
+					});
+					router.push("/");
+				},
+			},
 		);
 	}
 
@@ -37,20 +51,27 @@ export default function SendPage() {
 			<div className="bg-white rounded-2xl shadow-sm px-7 py-6">
 				<div className="flex items-center justify-between mb-6">
 					<div>
-						<h1 className="text-2xl font-bold text-gray-900">Send Notification</h1>
-						<p className="mt-1 text-sm text-gray-500">Dispatch a message to a channel</p>
+						<h1 className="text-2xl font-bold text-gray-900">
+							Send Notification
+						</h1>
+						<p className="mt-1 text-sm text-gray-500">
+							Dispatch a message to a channel
+						</p>
 					</div>
 					<Link
 						href="/"
-						className="text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
-					>
+						className="text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors">
 						← Back
 					</Link>
 				</div>
 
-				<form onSubmit={handleSubmit} className="space-y-5 max-w-lg">
+				<form
+					onSubmit={handleSubmit}
+					className="space-y-5 max-w-lg">
 					<div>
-						<label htmlFor="title" className="block text-sm font-medium text-gray-700">
+						<label
+							htmlFor="title"
+							className="block text-sm font-medium text-gray-700">
 							Title
 						</label>
 						<input
@@ -66,7 +87,9 @@ export default function SendPage() {
 					</div>
 
 					<div>
-						<label htmlFor="body" className="block text-sm font-medium text-gray-700">
+						<label
+							htmlFor="body"
+							className="block text-sm font-medium text-gray-700">
 							Body
 						</label>
 						<textarea
@@ -82,31 +105,59 @@ export default function SendPage() {
 					</div>
 
 					<div>
-						<label htmlFor="channel" className="block text-sm font-medium text-gray-700">
+						<label
+							htmlFor="channel"
+							className="block text-sm font-medium text-gray-700">
 							Channel
 						</label>
 						<select
 							id="channel"
 							value={channel}
-							onChange={(e) => setChannel(e.target.value as NotificationChannel)}
-							className={inputClass}
-						>
+							onChange={(e) =>
+								setChannel(e.target.value as NotificationChannel)
+							}
+							className={inputClass}>
 							{(channels ?? []).map((ch) => (
-								<option key={ch.name} value={ch.name} disabled={!ch.isAvailable}>
+								<option
+									key={ch.name}
+									value={ch.name}>
 									{ch.name}
-									{!ch.isAvailable ? " (unavailable)" : ""}
 								</option>
 							))}
 						</select>
 					</div>
 
+					{channel === "email" && (
+						<div>
+							<label
+								htmlFor="recipient"
+								className="block text-sm font-medium text-gray-700">
+								Recipient email
+							</label>
+							<input
+								id="recipient"
+								type="email"
+								value={recipientEmail}
+								onChange={(e) => setRecipientEmail(e.target.value)}
+								required
+								placeholder="user@example.com"
+								className={inputClass}
+							/>
+						</div>
+					)}
+
 					{mutation.isError && (
-						<p role="alert" className="text-sm text-red-600">
+						<p
+							role="alert"
+							className="text-sm text-red-600">
 							Failed to send notification. Please try again.
 						</p>
 					)}
 
-					<Button type="submit" isLoading={mutation.isPending} className="w-full justify-center">
+					<Button
+						type="submit"
+						isLoading={mutation.isPending}
+						className="w-full justify-center">
 						{mutation.isPending ? "Sending…" : "Send notification"}
 					</Button>
 				</form>

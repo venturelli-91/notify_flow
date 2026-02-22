@@ -4,6 +4,7 @@ import type { NotificationChannel } from "@server/core/domain/entities/Notificat
 // ── Job payload ───────────────────────────────────────────────────────────────
 
 export interface NotificationJobData {
+	readonly notificationId: string;
 	readonly title: string;
 	readonly body: string;
 	readonly channel: NotificationChannel;
