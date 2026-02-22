@@ -115,6 +115,17 @@ export class PrismaNotificationRepository
 			return fail(new DatabaseError(err));
 		}
 	}
+
+	async delete(id: string): Promise<Result<void, DomainError>> {
+		try {
+			await this.prisma.notification.delete({
+				where: { id },
+			});
+			return ok(undefined);
+		} catch (err) {
+			return fail(new DatabaseError(err));
+		}
+	}
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────

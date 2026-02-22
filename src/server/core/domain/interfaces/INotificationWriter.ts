@@ -22,4 +22,5 @@ export interface INotificationWriter {
 
 	markAllRead(): Promise<Result<void, DomainError>>;
 	markAllUnread(): Promise<Result<void, DomainError>>;
+	delete(id: string): Promise<Result<void, DomainError>>;
 }

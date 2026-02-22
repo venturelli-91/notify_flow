@@ -146,7 +146,8 @@ export function NotificationCard({ notification }: NotificationCardProps) {
 	const status = statusConfig[notification.status] ?? statusConfig.pending;
 	const queryClient = useQueryClient();
 
-	const canRetry = notification.status === "pending" || notification.status === "failed";
+	const canRetry =
+		notification.status === "pending" || notification.status === "failed";
 
 	const retryMutation = useMutation({
 		mutationFn: async () => {

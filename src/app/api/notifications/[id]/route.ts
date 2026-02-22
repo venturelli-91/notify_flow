@@ -7,7 +7,7 @@ import { logger } from "@server/lib/logger";
 
 export async function POST(
 	req: NextRequest,
-	{ params }: { params: Promise<{ id: string }> }
+	{ params }: { params: Promise<{ id: string }> },
 ) {
 	return withCorrelationId(req.headers.get("x-correlation-id"), async () => {
 		const { id } = await params;
@@ -20,7 +20,7 @@ export async function POST(
 		if (!findResult.ok) {
 			return NextResponse.json(
 				{ error: findResult.error.code },
-				{ status: findResult.error.statusCode }
+				{ status: findResult.error.statusCode },
 			);
 		}
 
@@ -32,7 +32,7 @@ export async function POST(
 		if (!updateResult.ok) {
 			return NextResponse.json(
 				{ error: updateResult.error.code },
-				{ status: updateResult.error.statusCode }
+				{ status: updateResult.error.statusCode },
 			);
 		}
 
@@ -47,7 +47,7 @@ export async function POST(
 
 export async function DELETE(
 	req: NextRequest,
-	{ params }: { params: Promise<{ id: string }> }
+	{ params }: { params: Promise<{ id: string }> },
 ) {
 	return withCorrelationId(req.headers.get("x-correlation-id"), async () => {
 		const { id } = await params;
@@ -60,11 +60,11 @@ export async function DELETE(
 		if (!findResult.ok) {
 			return NextResponse.json(
 				{ error: findResult.error.code },
-				{ status: findResult.error.statusCode }
+				{ status: findResult.error.statusCode },
 			);
 		}
 
-		// Mark as failed (soft delete for now)
+		// Delete the notification
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const ns = notificationService as any;
 		const deleteResult = await ns.softDelete(id);
@@ -72,7 +72,7 @@ export async function DELETE(
 		if (!deleteResult.ok) {
 			return NextResponse.json(
 				{ error: deleteResult.error.code },
-				{ status: deleteResult.error.statusCode }
+				{ status: deleteResult.error.statusCode },
 			);
 		}
 

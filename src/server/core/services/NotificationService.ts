@@ -55,7 +55,10 @@ export class NotificationService {
 
 		const sendResult = await channel.send(notification);
 		const finalStatus = sendResult.ok ? "sent" : "failed";
-		const updateResult = await this.writer.updateStatus(notification.id, finalStatus);
+		const updateResult = await this.writer.updateStatus(
+			notification.id,
+			finalStatus,
+		);
 
 		if (!sendResult.ok) return sendResult;
 		if (!updateResult.ok) return updateResult;
@@ -92,8 +95,7 @@ export class NotificationService {
 		return this.writer.updateStatus(id, "pending");
 	}
 
-	async softDelete(id: string): Promise<Result<Notification, DomainError>> {
-		// Mark as failed and archived for deletion
-		return this.writer.updateStatus(id, "failed");
+	async softDelete(id: string): Promise<Result<void, DomainError>> {
+		return this.writer.delete(id);
 	}
 }
