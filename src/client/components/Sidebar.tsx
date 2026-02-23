@@ -154,7 +154,7 @@ export function Sidebar() {
 	const pathname = usePathname();
 
 	return (
-		<aside className="w-52 flex-shrink-0 bg-white rounded-2xl shadow-sm flex flex-col py-8 px-4 self-start sticky top-5">
+		<aside className="w-52 flex-shrink-0 bg-white rounded-2xl shadow-sm flex flex-col py-8 px-4 self-start sticky top-5 max-sm:hidden">
 			{/* Logo */}
 			<div className="flex items-center gap-3 px-2 mb-8">
 				<div className="h-9 w-9 rounded-xl bg-violet-600 flex items-center justify-center flex-shrink-0">

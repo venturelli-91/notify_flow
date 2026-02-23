@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@client/lib/queryKeys";
 import type { Notification } from "@server/core/domain/entities/Notification";
@@ -179,30 +178,30 @@ export function NotificationCard({ notification }: NotificationCardProps) {
 	return (
 		<div
 			title={notification.status}
-			className="flex items-center gap-4 bg-white rounded-xl shadow-sm px-5 py-[18px] hover:shadow-md transition-shadow">
+			className="flex items-center gap-4 bg-white rounded-xl shadow-sm px-5 py-[18px] hover:shadow-md transition-shadow max-sm:px-3 max-sm:py-3 max-sm:gap-2">
 			{/* Ícone do canal */}
 			<div
-				className={`h-12 w-12 rounded-xl flex-shrink-0 flex items-center justify-center ${ch.bg} ${ch.color}`}>
+				className={`h-12 w-12 rounded-xl flex-shrink-0 flex items-center justify-center ${ch.bg} ${ch.color} max-sm:h-10 max-sm:w-10`}>
 				{ch.svg}
 			</div>
 
 			{/* Conteúdo */}
 			<div className="flex-1 min-w-0">
-				<p className="text-sm leading-snug">
+				<p className="text-sm leading-snug max-sm:text-xs">
 					<span className="font-semibold text-gray-900">
 						{notification.title}
 					</span>
 					<span className="ml-2 text-xs text-gray-400 font-normal">{time}</span>
 				</p>
-				<p className="mt-0.5 text-sm text-gray-500 truncate">
+				<p className="mt-0.5 text-sm text-gray-500 truncate max-sm:text-xs">
 					{notification.body}
 				</p>
 			</div>
 
 			{/* Status badge + Actions */}
-			<div className="flex items-center gap-2 flex-shrink-0">
+			<div className="flex items-center gap-2 flex-shrink-0 max-sm:gap-1">
 				<span
-					className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${status.className}`}>
+					className={`text-[11px] font-semibold px-2.5 py-1 rounded-full max-sm:text-[10px] max-sm:px-2 max-sm:py-0.5 ${status.className}`}>
 					{status.label}
 				</span>
 
@@ -211,7 +210,7 @@ export function NotificationCard({ notification }: NotificationCardProps) {
 						type="button"
 						onClick={() => retryMutation.mutate()}
 						disabled={retryMutation.isPending || deleteMutation.isPending}
-						className="p-1.5 text-gray-500 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-colors disabled:opacity-50"
+						className="p-1.5 text-gray-500 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-colors disabled:opacity-50 max-sm:hidden"
 						title="Retry notification">
 						<RetryIcon />
 					</button>
@@ -222,7 +221,7 @@ export function NotificationCard({ notification }: NotificationCardProps) {
 						type="button"
 						onClick={() => deleteMutation.mutate()}
 						disabled={deleteMutation.isPending || retryMutation.isPending}
-						className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+						className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 max-sm:hidden"
 						title="Delete notification">
 						<DeleteIcon />
 					</button>

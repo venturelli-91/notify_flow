@@ -173,7 +173,7 @@ export function TopBar() {
 
 				{/* Dropdown */}
 				{open && (
-					<div className="absolute right-0 top-[calc(100%+10px)] w-56 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50">
+					<div className="absolute right-0 top-[calc(100%+10px)] w-56 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50 max-sm:w-48 max-sm:right-auto max-sm:left-0">
 						{/* Header do menu */}
 						<div className="flex items-center gap-3 px-4 py-4 border-b border-gray-100">
 							<div className="h-10 w-10 rounded-full bg-violet-600 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">

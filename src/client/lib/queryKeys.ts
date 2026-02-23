@@ -15,4 +15,8 @@ export const queryKeys = {
 		all: ["channels"] as const,
 		list: () => [...queryKeys.channels.all, "list"] as const,
 	},
+	analytics: {
+		all: ["analytics"] as const,
+		summary: () => [...queryKeys.analytics.all, "summary"] as const,
+	},
 } as const;
