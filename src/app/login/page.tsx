@@ -111,16 +111,17 @@ export default function LoginPage() {
 						</button>
 					</form>
 				</div>
-			</div>
 
-			<p className="mt-5 text-center text-[13px] text-gray-500">
-				Don&apos;t have an account?{" "}
-				<Link
-					href="/register"
-					className="font-semibold text-violet-600 hover:text-violet-700">
-					Sign up
-				</Link>
-			</p>
+				{/* Link para cadastro — dentro do max-w-sm, abaixo do card */}
+				<p className="mt-5 text-center text-[13px] text-gray-500">
+					Don&apos;t have an account?{" "}
+					<Link
+						href="/register"
+						className="font-semibold text-violet-600 hover:text-violet-700">
+						Sign up
+					</Link>
+				</p>
+			</div>
 		</div>
 	);
 }
