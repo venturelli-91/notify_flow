@@ -96,9 +96,10 @@ describe("NotificationList", () => {
 		renderWithProviders(<NotificationList />);
 
 		await waitFor(() => {
-			const dot = screen.getByTitle("pending");
-			expect(dot).toBeInTheDocument();
-			expect(dot.className).toContain("animate-pulse");
+			const card = screen.getByTitle("pending");
+			expect(card).toBeInTheDocument();
+			const badge = card.querySelector('[class*="animate-pulse"]');
+			expect(badge).toBeTruthy();
 		});
 	});
 });
