@@ -1,6 +1,7 @@
 "use client";
 
 import { QueryClientProvider } from "@tanstack/react-query";
+import { SessionProvider } from "next-auth/react";
 import { Toaster } from "sonner";
 import { queryClient } from "@client/lib/queryClient";
 import { type ReactNode } from "react";
@@ -13,9 +14,11 @@ import { type ReactNode } from "react";
  */
 export function Providers({ children }: { readonly children: ReactNode }) {
 	return (
-		<QueryClientProvider client={queryClient}>
-			{children}
-			<Toaster position="bottom-right" richColors />
-		</QueryClientProvider>
+		<SessionProvider>
+			<QueryClientProvider client={queryClient}>
+				{children}
+				<Toaster position="bottom-right" richColors />
+			</QueryClientProvider>
+		</SessionProvider>
 	);
 }

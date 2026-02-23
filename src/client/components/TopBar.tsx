@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useSession, signOut } from "next-auth/react";
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
@@ -115,6 +116,11 @@ function LogoutIcon() {
 export function TopBar() {
 	const [open, setOpen] = useState(false);
 	const ref = useRef<HTMLDivElement>(null);
+	const { data: session } = useSession();
+
+	const name = session?.user?.name ?? "Admin";
+	const email = session?.user?.email ?? "";
+	const initial = name.charAt(0).toUpperCase();
 
 	useEffect(() => {
 		function onClickOutside(e: MouseEvent) {
@@ -166,7 +172,7 @@ export function TopBar() {
 					aria-expanded={open}>
 					{/* Avatar circular */}
 					<div className="h-9 w-9 rounded-full bg-violet-600 flex items-center justify-center text-white font-semibold text-sm ring-2 ring-white shadow-sm">
-						A
+						{initial}
 					</div>
 					<ChevronDownIcon />
 				</button>
@@ -177,14 +183,14 @@ export function TopBar() {
 						{/* Header do menu */}
 						<div className="flex items-center gap-3 px-4 py-4 border-b border-gray-100">
 							<div className="h-10 w-10 rounded-full bg-violet-600 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
-								A
+								{initial}
 							</div>
 							<div className="min-w-0">
 								<p className="text-sm font-semibold text-gray-900 truncate">
-									Admin
+									{name}
 								</p>
 								<p className="text-xs text-gray-400 truncate">
-									admin@notifyflow.com
+									{email}
 								</p>
 							</div>
 						</div>
@@ -202,7 +208,9 @@ export function TopBar() {
 						</div>
 
 						<div className="border-t border-gray-100 py-1.5">
-							<button className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors">
+							<button
+							onClick={() => signOut({ callbackUrl: "/login" })}
+							className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors">
 								<LogoutIcon />
 								Sign out
 							</button>

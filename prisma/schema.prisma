@@ -35,3 +35,11 @@ model Template {
   body      String   // supports {{variable}} placeholders
   createdAt DateTime @default(now())
 }
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String   // bcrypt hash
+  name      String?
+  createdAt DateTime @default(now())
+}
