@@ -78,7 +78,7 @@ export default function AnalyticsPage() {
 	return (
 		<div className="flex flex-col min-h-full">
 			<TopBar />
-			<div className="flex-1 bg-white rounded-2xl shadow-sm px-8 py-7">
+			<div className="flex-1 bg-white rounded-2xl shadow-sm px-8 py-7 max-sm:px-4 max-sm:py-5">
 				<h1 className="text-[22px] font-bold text-gray-900 leading-tight mb-1">
 					Analytics
 				</h1>

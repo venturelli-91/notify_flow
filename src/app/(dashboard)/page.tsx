@@ -13,7 +13,7 @@ export default function DashboardPage() {
 			<TopBar />
 
 			{/* Cartão branco principal */}
-			<div className="flex-1 bg-white rounded-2xl shadow-sm px-8 py-7">
+			<div className="flex-1 bg-white rounded-2xl shadow-sm px-8 py-7 max-sm:px-4 max-sm:py-5">
 				{/* Cabeçalho da página */}
 				<div className="flex items-start justify-between mb-1">
 					<h1 className="text-[22px] font-bold text-gray-900 leading-tight">

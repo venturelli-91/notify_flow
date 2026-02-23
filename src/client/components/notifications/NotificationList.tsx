@@ -52,7 +52,7 @@ export function NotificationListSkeleton() {
 export function NotificationList() {
 	const { query } = useNotifications();
 	const searchParams = useSearchParams();
-	const q = searchParams.get("q")?.trim().toLowerCase() ?? "";
+	const q = searchParams?.get("q")?.trim().toLowerCase() ?? "";
 
 	if (query.isLoading) return <NotificationListSkeleton />;
 
@@ -85,7 +85,7 @@ export function NotificationList() {
 	if (notifications.length === 0) {
 		return (
 			<div className="rounded-xl bg-gray-50 border border-gray-200 px-5 py-10 text-center">
-				<p className="text-sm font-medium text-gray-600">No results for &ldquo;{searchParams.get("q")}&rdquo;</p>
+				<p className="text-sm font-medium text-gray-600">No results for &ldquo;{searchParams?.get("q")}&rdquo;</p>
 				<p className="mt-1 text-xs text-gray-400">Try a different search term.</p>
 			</div>
 		);

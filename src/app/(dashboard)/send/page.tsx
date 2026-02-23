@@ -48,7 +48,7 @@ export default function SendPage() {
 		<div className="flex flex-col gap-0 min-h-full">
 			<TopBar />
 
-			<div className="bg-white rounded-2xl shadow-sm px-7 py-6">
+			<div className="bg-white rounded-2xl shadow-sm px-7 py-6 max-sm:px-4 max-sm:py-5">
 				<div className="flex items-center justify-between mb-6">
 					<div>
 						<h1 className="text-2xl font-bold text-gray-900">

@@ -46,7 +46,7 @@ export function NotificationActions() {
 				disabled={
 					markAllReadMutation.isPending || markAllUnreadMutation.isPending
 				}
-				className="min-w-[140px] text-[13px] font-medium text-gray-700 border border-gray-300 rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors disabled:opacity-50">
+				className="max-sm:hidden min-w-[140px] text-[13px] font-medium text-gray-700 border border-gray-300 rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors disabled:opacity-50">
 				{markAllReadMutation.isPending ? "Updating…" : "Mark all as Read"}
 			</button>
 			<button
@@ -55,7 +55,7 @@ export function NotificationActions() {
 				disabled={
 					markAllUnreadMutation.isPending || markAllReadMutation.isPending
 				}
-				className="min-w-[148px] text-[13px] font-medium text-gray-700 border border-gray-300 rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors disabled:opacity-50">
+				className="max-sm:hidden min-w-[148px] text-[13px] font-medium text-gray-700 border border-gray-300 rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors disabled:opacity-50">
 				{markAllUnreadMutation.isPending ? "Updating…" : "Mark all as Unread"}
 			</button>
 		</div>

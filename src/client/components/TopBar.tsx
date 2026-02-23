@@ -125,19 +125,19 @@ function SearchBarInner() {
 	}
 
 	return (
-		<div className="flex-1 flex items-center bg-white rounded-xl shadow-sm pl-4 pr-2 py-2 gap-3">
+		<div className="flex-1 flex items-center bg-white rounded-xl shadow-sm pl-4 pr-2 py-2 gap-3 max-sm:pl-3 max-sm:gap-2">
 			<input
 				type="text"
 				placeholder="Search notifications…"
 				value={q}
 				onChange={handleChange}
-				className="flex-1 bg-transparent text-sm text-gray-600 placeholder:text-gray-400 outline-none"
+				className="flex-1 bg-transparent text-sm text-gray-600 placeholder:text-gray-400 outline-none max-sm:text-xs"
 			/>
-			<MicIcon />
+			<span className="max-sm:hidden"><MicIcon /></span>
 			<button
 				type="button"
 				aria-label="Search"
-				className="h-8 w-8 rounded-full bg-violet-600 flex items-center justify-center hover:bg-violet-700 transition-colors flex-shrink-0">
+				className="h-8 w-8 rounded-full bg-violet-600 flex items-center justify-center hover:bg-violet-700 transition-colors flex-shrink-0 max-sm:h-7 max-sm:w-7">
 				<SearchIcon />
 			</button>
 		</div>
@@ -166,7 +166,7 @@ export function TopBar() {
 	}, []);
 
 	return (
-		<header className="flex items-center gap-4 mb-5">
+		<header className="flex items-center gap-3 mb-5 max-sm:mb-4">
 			{/* ── Search ─────────────────────────────────────────────────── */}
 			<Suspense fallback={
 				<div className="flex-1 flex items-center bg-white rounded-xl shadow-sm pl-4 pr-2 py-2 gap-3">
