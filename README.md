@@ -151,15 +151,21 @@ docker compose up -d
 
 # 3. Configure environment
 cp .env.example .env
-# Edit .env if needed (defaults work with docker compose)
+# Set NEXTAUTH_SECRET: openssl rand -base64 32
+# Other defaults work with docker compose
 
 # 4. Apply migrations
 npx prisma migrate dev
 
-# 5. Start dev server
+# 5. Seed the database (creates the admin user)
+npx prisma db seed
+
+# 6. Start dev server
 npm run dev
 # → http://localhost:3000
 ```
+
+**Default credentials:** `admin@notifyflow.com` / `admin123`
 
 ### Running tests
 
@@ -203,14 +209,20 @@ WEBHOOK_URL=https://your-endpoint.com/hook
 
 ```
 src/
+├── middleware.ts                    # NextAuth route protection
 ├── app/
 │   ├── layout.tsx                   # Server Component — mounts <Providers>
+│   ├── login/page.tsx               # Login page (credentials)
 │   ├── (dashboard)/
-│   │   ├── page.tsx                 # Dashboard — notification feed
-│   │   └── send/page.tsx            # Send form with optimistic update
+│   │   ├── page.tsx                 # Dashboard — notification feed + search
+│   │   ├── send/page.tsx            # Send form with optimistic update
+│   │   ├── channels/page.tsx        # Channel status (live from env vars)
+│   │   └── analytics/page.tsx       # Delivery stats + by-channel breakdown
 │   └── api/
 │       ├── notifications/route.ts   # GET + POST with Zod + rate limiting
-│       └── channels/route.ts        # GET — channel availability
+│       ├── channels/route.ts        # GET — channel availability
+│       ├── analytics/route.ts       # GET — aggregated delivery stats
+│       └── auth/[...nextauth]/      # NextAuth handler
 ├── server/
 │   ├── core/                        # Framework-free domain (ADR 003)
 │   │   ├── domain/
@@ -218,6 +230,7 @@ src/
 │   │   ├── repositories/
 │   │   └── channels/
 │   └── lib/
+│       ├── auth.ts                  # NextAuth config (CredentialsProvider)
 │       ├── container.ts             # Only file with concrete imports
 │       ├── logger.ts                # Structured JSON logger
 │       ├── correlationId.ts         # AsyncLocalStorage request context
@@ -228,7 +241,8 @@ src/
     │   └── notifications/           # NotificationCard, NotificationList
     ├── hooks/
     │   ├── useNotifications.ts      # Query + mutation with optimistic update
-    │   └── useChannels.ts           # Read-only, 5 min stale
+    │   ├── useChannels.ts           # Read-only, 5 min stale
+    │   └── useAnalytics.ts          # Delivery stats, 30s stale
     └── lib/
         ├── queryClient.ts           # TanStack QueryClient singleton
         └── queryKeys.ts             # Centralised key factory

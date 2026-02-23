@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useNotifications } from "@client/hooks/useNotifications";
 import { NotificationCard } from "@client/components/notifications/NotificationCard";
 import type { Notification } from "@server/core/domain/entities/Notification";
@@ -50,6 +51,8 @@ export function NotificationListSkeleton() {
 
 export function NotificationList() {
 	const { query } = useNotifications();
+	const searchParams = useSearchParams();
+	const q = searchParams.get("q")?.trim().toLowerCase() ?? "";
 
 	if (query.isLoading) return <NotificationListSkeleton />;
 
@@ -61,13 +64,29 @@ export function NotificationList() {
 		);
 	}
 
-	const notifications = query.data ?? [];
+	const all = query.data ?? [];
+	const notifications = q
+		? all.filter(
+				(n) =>
+					n.title.toLowerCase().includes(q) ||
+					n.body.toLowerCase().includes(q),
+			)
+		: all;
 
-	if (notifications.length === 0) {
+	if (all.length === 0) {
 		return (
 			<div className="rounded-xl bg-gray-50 border border-gray-200 px-5 py-10 text-center">
 				<p className="text-sm font-medium text-gray-600">No notifications yet</p>
 				<p className="mt-1 text-xs text-gray-400">Send your first notification to get started.</p>
+			</div>
+		);
+	}
+
+	if (notifications.length === 0) {
+		return (
+			<div className="rounded-xl bg-gray-50 border border-gray-200 px-5 py-10 text-center">
+				<p className="text-sm font-medium text-gray-600">No results for &ldquo;{searchParams.get("q")}&rdquo;</p>
+				<p className="mt-1 text-xs text-gray-400">Try a different search term.</p>
 			</div>
 		);
 	}

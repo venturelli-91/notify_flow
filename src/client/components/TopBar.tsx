@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import { useSession, signOut } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
@@ -111,6 +112,38 @@ function LogoutIcon() {
 	);
 }
 
+// ── Search bar (needs Suspense because of useSearchParams) ───────────────────
+
+function SearchBarInner() {
+	const router = useRouter();
+	const searchParams = useSearchParams();
+	const q = searchParams.get("q") ?? "";
+
+	function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+		const value = e.target.value;
+		router.replace(value ? `/?q=${encodeURIComponent(value)}` : "/");
+	}
+
+	return (
+		<div className="flex-1 flex items-center bg-white rounded-xl shadow-sm pl-4 pr-2 py-2 gap-3">
+			<input
+				type="text"
+				placeholder="Search notifications…"
+				value={q}
+				onChange={handleChange}
+				className="flex-1 bg-transparent text-sm text-gray-600 placeholder:text-gray-400 outline-none"
+			/>
+			<MicIcon />
+			<button
+				type="button"
+				aria-label="Search"
+				className="h-8 w-8 rounded-full bg-violet-600 flex items-center justify-center hover:bg-violet-700 transition-colors flex-shrink-0">
+				<SearchIcon />
+			</button>
+		</div>
+	);
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function TopBar() {
@@ -135,20 +168,13 @@ export function TopBar() {
 	return (
 		<header className="flex items-center gap-4 mb-5">
 			{/* ── Search ─────────────────────────────────────────────────── */}
-			<div className="flex-1 flex items-center bg-white rounded-xl shadow-sm pl-4 pr-2 py-2 gap-3">
-				<input
-					type="text"
-					placeholder="Search"
-					className="flex-1 bg-transparent text-sm text-gray-600 placeholder:text-gray-400 outline-none"
-				/>
-				<MicIcon />
-				<button
-					type="button"
-					aria-label="Search"
-					className="h-8 w-8 rounded-full bg-violet-600 flex items-center justify-center hover:bg-violet-700 transition-colors flex-shrink-0">
-					<SearchIcon />
-				</button>
-			</div>
+			<Suspense fallback={
+				<div className="flex-1 flex items-center bg-white rounded-xl shadow-sm pl-4 pr-2 py-2 gap-3">
+					<div className="flex-1 h-4 rounded bg-gray-100 animate-pulse" />
+				</div>
+			}>
+				<SearchBarInner />
+			</Suspense>
 
 			{/* ── Bell (solto, sem container) ─────────────────────────── */}
 			<button
