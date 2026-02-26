@@ -10,6 +10,35 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: notifyflow_test
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U user -d notifyflow_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://user:password@localhost:5432/notifyflow_test
+      REDIS_URL: redis://localhost:6379
+
     steps:
       - uses: actions/checkout@v4
 
@@ -21,8 +50,17 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
+      - name: Type check
+        run: npx tsc --noEmit
+
       - name: Lint
         run: npm run lint
 
       - name: Unit & component tests
         run: npx vitest run src/tests/unit src/tests/components
+
+      - name: Run database migrations
+        run: npx prisma migrate deploy
+
+      - name: Integration tests
+        run: npx vitest run src/tests/integration

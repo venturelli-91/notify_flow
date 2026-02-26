@@ -21,6 +21,7 @@ function makeNotification(overrides: Partial<Notification> = {}): Notification {
 		body: "This is a test",
 		channel: "in-app",
 		status: "sent",
+		readAt: null,
 		metadata: null,
 		correlationId: null,
 		createdAt: new Date(),

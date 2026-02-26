@@ -1,17 +1,22 @@
 /**
- * Integration tests — POST /api/notifications
+ * Integration tests — /api/notifications, /api/analytics
  *
  * Runs against a real Prisma client connected to TEST_DATABASE_URL.
  * Requires a running Postgres instance (see docker-compose.yml).
  *
  * Start the test DB before running:
- *   docker compose up -d postgres
+ *   docker compose up -d postgres redis
  *   DATABASE_URL=$TEST_DATABASE_URL npx prisma migrate deploy
  *   npx vitest run src/tests/integration
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
-import { POST, GET } from "@/app/api/notifications/route";
+import { POST, GET, PATCH } from "@/app/api/notifications/route";
+import {
+	POST as retryNotification,
+	DELETE as deleteNotification,
+} from "@/app/api/notifications/[id]/route";
+import { GET as getAnalytics } from "@/app/api/analytics/route";
 import { prisma } from "@server/lib/prisma";
 import { NextRequest } from "next/server";
 
@@ -39,13 +44,60 @@ function makeGetRequest(headers: Record<string, string> = {}): NextRequest {
 	});
 }
 
+function makePatchRequest(body: unknown): NextRequest {
+	return new NextRequest("http://localhost/api/notifications", {
+		method: "PATCH",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(body),
+	});
+}
+
+function makeIdParams(id: string): { params: Promise<{ id: string }> } {
+	return { params: Promise.resolve({ id }) };
+}
+
+function makeRetryRequest(id: string): NextRequest {
+	return new NextRequest(`http://localhost/api/notifications/${id}/retry`, {
+		method: "POST",
+	});
+}
+
+function makeDeleteRequest(id: string): NextRequest {
+	return new NextRequest(`http://localhost/api/notifications/${id}`, {
+		method: "DELETE",
+	});
+}
+
+function makeAnalyticsRequest(): NextRequest {
+	return new NextRequest("http://localhost/api/analytics", { method: "GET" });
+}
+
+async function seedNotification(
+	overrides: Partial<{
+		title: string;
+		body: string;
+		channel: string;
+		status: string;
+	}> = {},
+) {
+	return prisma.notification.create({
+		data: {
+			title: "Seed",
+			body: "Body",
+			channel: "in-app",
+			status: "pending",
+			...overrides,
+		},
+	});
+}
+
 // ── Setup ─────────────────────────────────────────────────────────────────────
 
 beforeEach(async () => {
 	await prisma.notification.deleteMany();
 });
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
+// ── POST /api/notifications ───────────────────────────────────────────────────
 
 describe("POST /api/notifications", () => {
 	it("returns 202 + jobId on valid payload (async enqueue)", async () => {
@@ -117,6 +169,8 @@ describe("POST /api/notifications", () => {
 	});
 });
 
+// ── GET /api/notifications ────────────────────────────────────────────────────
+
 describe("GET /api/notifications", () => {
 	it("returns an empty list when no notifications exist", async () => {
 		const res = await GET(makeGetRequest());
@@ -128,18 +182,8 @@ describe("GET /api/notifications", () => {
 	it("returns existing notifications sorted newest-first", async () => {
 		await prisma.notification.createMany({
 			data: [
-				{
-					title: "First",
-					body: "B",
-					channel: "in-app",
-					status: "sent",
-				},
-				{
-					title: "Second",
-					body: "B",
-					channel: "in-app",
-					status: "sent",
-				},
+				{ title: "First", body: "B", channel: "in-app", status: "sent" },
+				{ title: "Second", body: "B", channel: "in-app", status: "sent" },
 			],
 		});
 
@@ -148,7 +192,146 @@ describe("GET /api/notifications", () => {
 
 		expect(res.status).toBe(200);
 		expect(json.data).toHaveLength(2);
-		// newest first
 		expect(json.data[0].title).toBe("Second");
+	});
+});
+
+// ── PATCH /api/notifications ──────────────────────────────────────────────────
+
+describe("PATCH /api/notifications", () => {
+	it("mark_all_read returns 200", async () => {
+		await seedNotification({ status: "sent" });
+		await seedNotification({ status: "sent" });
+
+		const res = await PATCH(makePatchRequest({ action: "mark_all_read" }));
+		const json = await res.json();
+
+		expect(res.status).toBe(200);
+		expect(json.ok).toBe(true);
+	});
+
+	it("mark_all_unread returns 200", async () => {
+		await seedNotification({ status: "sent" });
+
+		const res = await PATCH(makePatchRequest({ action: "mark_all_unread" }));
+		const json = await res.json();
+
+		expect(res.status).toBe(200);
+		expect(json.ok).toBe(true);
+	});
+
+	it("returns 422 on unknown action", async () => {
+		const res = await PATCH(makePatchRequest({ action: "delete_all" }));
+		expect(res.status).toBe(422);
+		const json = await res.json();
+		expect(json.error).toBe("INVALID_PAYLOAD");
+	});
+
+	it("returns 400 on invalid JSON body", async () => {
+		const req = new NextRequest("http://localhost/api/notifications", {
+			method: "PATCH",
+			headers: { "Content-Type": "application/json" },
+			body: "not json {{{",
+		});
+		const res = await PATCH(req);
+		expect(res.status).toBe(400);
+		const json = await res.json();
+		expect(json.error).toBe("INVALID_JSON");
+	});
+});
+
+// ── POST /api/notifications/[id]/retry ───────────────────────────────────────
+
+describe("POST /api/notifications/[id]/retry", () => {
+	it("resets a failed notification to pending and returns 200", async () => {
+		const notif = await seedNotification({ status: "failed" });
+
+		const res = await retryNotification(
+			makeRetryRequest(notif.id),
+			makeIdParams(notif.id),
+		);
+		const json = await res.json();
+
+		expect(res.status).toBe(200);
+		expect(json.ok).toBe(true);
+
+		const updated = await prisma.notification.findUnique({
+			where: { id: notif.id },
+		});
+		expect(updated?.status).toBe("pending");
+	});
+
+	it("returns 404 when notification does not exist", async () => {
+		const res = await retryNotification(
+			makeRetryRequest("non-existent-id"),
+			makeIdParams("non-existent-id"),
+		);
+		expect(res.status).toBe(404);
+	});
+});
+
+// ── DELETE /api/notifications/[id] ───────────────────────────────────────────
+
+describe("DELETE /api/notifications/[id]", () => {
+	it("soft-deletes a notification and returns 200", async () => {
+		const notif = await seedNotification();
+
+		const res = await deleteNotification(
+			makeDeleteRequest(notif.id),
+			makeIdParams(notif.id),
+		);
+		const json = await res.json();
+
+		expect(res.status).toBe(200);
+		expect(json.ok).toBe(true);
+	});
+
+	it("returns 404 when notification does not exist", async () => {
+		const res = await deleteNotification(
+			makeDeleteRequest("non-existent-id"),
+			makeIdParams("non-existent-id"),
+		);
+		expect(res.status).toBe(404);
+	});
+});
+
+// ── GET /api/analytics ────────────────────────────────────────────────────────
+
+describe("GET /api/analytics", () => {
+	it("returns all-zero counters and null deliveryRate when DB is empty", async () => {
+		const res = await getAnalytics(makeAnalyticsRequest());
+		const json = await res.json();
+
+		expect(res.status).toBe(200);
+		expect(json.data.total).toBe(0);
+		expect(json.data.sent).toBe(0);
+		expect(json.data.failed).toBe(0);
+		expect(json.data.pending).toBe(0);
+		expect(json.data.deliveryRate).toBeNull();
+	});
+
+	it("returns correct counts and deliveryRate with mixed statuses", async () => {
+		await prisma.notification.createMany({
+			data: [
+				{ title: "A", body: "B", channel: "email", status: "sent" },
+				{ title: "B", body: "B", channel: "email", status: "sent" },
+				{ title: "C", body: "B", channel: "webhook", status: "failed" },
+				{ title: "D", body: "B", channel: "in-app", status: "pending" },
+			],
+		});
+
+		const res = await getAnalytics(makeAnalyticsRequest());
+		const json = await res.json();
+
+		expect(res.status).toBe(200);
+		expect(json.data.total).toBe(4);
+		expect(json.data.sent).toBe(2);
+		expect(json.data.failed).toBe(1);
+		expect(json.data.pending).toBe(1);
+		// deliveryRate = round(2 / (2+1) * 100) = 67
+		expect(json.data.deliveryRate).toBe(67);
+		expect(json.data.byChannel.email).toBe(2);
+		expect(json.data.byChannel.webhook).toBe(1);
+		expect(json.data.byChannel.inApp).toBe(1);
 	});
 });

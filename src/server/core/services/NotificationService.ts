@@ -66,15 +66,6 @@ export class NotificationService {
 		return ok(updateResult.value);
 	}
 
-	/** @deprecated Use createPending() + deliver() separately. Kept for tests. */
-	async send(
-		input: CreateNotificationInput,
-	): Promise<Result<Notification, DomainError>> {
-		const createResult = await this.createPending(input);
-		if (!createResult.ok) return createResult;
-		return this.deliver(createResult.value);
-	}
-
 	async findAll(): Promise<Result<Notification[], DomainError>> {
 		return this.reader.findAll();
 	}
