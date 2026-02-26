@@ -24,10 +24,7 @@ export async function POST(
 			);
 		}
 
-		// Reset status to pending to retry - using writer method directly
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const ns = notificationService as any;
-		const updateResult = await ns.retry(id);
+		const updateResult = await notificationService.retry(id);
 
 		if (!updateResult.ok) {
 			return NextResponse.json(
@@ -64,10 +61,7 @@ export async function DELETE(
 			);
 		}
 
-		// Delete the notification
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const ns = notificationService as any;
-		const deleteResult = await ns.softDelete(id);
+		const deleteResult = await notificationService.softDelete(id);
 
 		if (!deleteResult.ok) {
 			return NextResponse.json(

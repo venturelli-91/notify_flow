@@ -25,23 +25,9 @@ import { withCorrelationId } from "@server/lib/correlationId";
 import { logger } from "@server/lib/logger";
 import {
 	NOTIFICATION_QUEUE,
+	parseBullMQConnection,
 	type NotificationJobData,
 } from "@server/lib/queue";
-
-// Plain options object — avoids the dual-ioredis type conflict.
-// BullMQ uses its own bundled ioredis; we must not pass the top-level instance.
-function parseBullMQConnection() {
-	const raw = process.env["REDIS_URL"] ?? "redis://localhost:6379";
-	const url = new URL(raw);
-	return {
-		host: url.hostname,
-		port: Number(url.port || 6379),
-		...(url.password ? { password: decodeURIComponent(url.password) } : {}),
-		...(url.protocol === "rediss:" ? { tls: {} } : {}),
-		maxRetriesPerRequest: null as null,
-		enableReadyCheck: false as const,
-	};
-}
 
 const connection = parseBullMQConnection();
 

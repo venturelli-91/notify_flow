@@ -22,7 +22,7 @@ export const NOTIFICATION_QUEUE = "notifications" as const;
 // (instead of a top-level IORedis instance) avoids the dual-ioredis type
 // conflict while still setting maxRetriesPerRequest: null as required.
 
-function parseBullMQConnection() {
+export function parseBullMQConnection() {
 	const raw = process.env["REDIS_URL"] ?? "redis://localhost:6379";
 	const url = new URL(raw);
 	return {
