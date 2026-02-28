@@ -20,6 +20,10 @@ import { GET as getAnalytics } from "@/app/api/analytics/route";
 import { prisma } from "@server/lib/prisma";
 import { NextRequest } from "next/server";
 
+// ── Constants ────────────────────────────────────────────────────────────────
+
+const TEST_USER_ID = "test-user-id-123";
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function makePostRequest(
@@ -31,6 +35,7 @@ function makePostRequest(
 		headers: {
 			"Content-Type": "application/json",
 			"X-Forwarded-For": "127.0.0.1",
+			"x-user-id": TEST_USER_ID,
 			...headers,
 		},
 		body: JSON.stringify(body),
@@ -40,14 +45,20 @@ function makePostRequest(
 function makeGetRequest(headers: Record<string, string> = {}): NextRequest {
 	return new NextRequest("http://localhost/api/notifications", {
 		method: "GET",
-		headers,
+		headers: {
+			"x-user-id": TEST_USER_ID,
+			...headers,
+		},
 	});
 }
 
 function makePatchRequest(body: unknown): NextRequest {
 	return new NextRequest("http://localhost/api/notifications", {
 		method: "PATCH",
-		headers: { "Content-Type": "application/json" },
+		headers: {
+			"Content-Type": "application/json",
+			"x-user-id": TEST_USER_ID,
+		},
 		body: JSON.stringify(body),
 	});
 }
@@ -78,6 +89,7 @@ async function seedNotification(
 		body: string;
 		channel: string;
 		status: string;
+		userId: string;
 	}> = {},
 ) {
 	return prisma.notification.create({
@@ -86,6 +98,7 @@ async function seedNotification(
 			body: "Body",
 			channel: "in-app",
 			status: "pending",
+			userId: TEST_USER_ID,
 			...overrides,
 		},
 	});
@@ -182,8 +195,20 @@ describe("GET /api/notifications", () => {
 	it("returns existing notifications sorted newest-first", async () => {
 		await prisma.notification.createMany({
 			data: [
-				{ title: "First", body: "B", channel: "in-app", status: "sent" },
-				{ title: "Second", body: "B", channel: "in-app", status: "sent" },
+				{
+					title: "First",
+					body: "B",
+					channel: "in-app",
+					status: "sent",
+					userId: TEST_USER_ID,
+				},
+				{
+					title: "Second",
+					body: "B",
+					channel: "in-app",
+					status: "sent",
+					userId: TEST_USER_ID,
+				},
 			],
 		});
 
@@ -273,7 +298,7 @@ describe("POST /api/notifications/[id]/retry", () => {
 // ── DELETE /api/notifications/[id] ───────────────────────────────────────────
 
 describe("DELETE /api/notifications/[id]", () => {
-	it("soft-deletes a notification and returns 200", async () => {
+	it("deletes a notification (hard delete) and returns 200", async () => {
 		const notif = await seedNotification();
 
 		const res = await deleteNotification(
@@ -313,10 +338,34 @@ describe("GET /api/analytics", () => {
 	it("returns correct counts and deliveryRate with mixed statuses", async () => {
 		await prisma.notification.createMany({
 			data: [
-				{ title: "A", body: "B", channel: "email", status: "sent" },
-				{ title: "B", body: "B", channel: "email", status: "sent" },
-				{ title: "C", body: "B", channel: "webhook", status: "failed" },
-				{ title: "D", body: "B", channel: "in-app", status: "pending" },
+				{
+					title: "A",
+					body: "B",
+					channel: "email",
+					status: "sent",
+					userId: TEST_USER_ID,
+				},
+				{
+					title: "B",
+					body: "B",
+					channel: "email",
+					status: "sent",
+					userId: TEST_USER_ID,
+				},
+				{
+					title: "C",
+					body: "B",
+					channel: "webhook",
+					status: "failed",
+					userId: TEST_USER_ID,
+				},
+				{
+					title: "D",
+					body: "B",
+					channel: "in-app",
+					status: "pending",
+					userId: TEST_USER_ID,
+				},
 			],
 		});
 
