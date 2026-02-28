@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@server/lib/auth";
 import { prisma } from "@server/lib/prisma";
 import { withCorrelationId, getCorrelationId } from "@server/lib/correlationId";
 import { logger } from "@server/lib/logger";
@@ -11,22 +13,35 @@ export async function GET(req: NextRequest) {
 
 		logger.info("GET /api/analytics");
 
+		// Get userId from session
+		const session = await getServerSession(authOptions);
+		const userId = session?.user?.id;
+
+		if (!userId) {
+			return NextResponse.json(
+				{ error: "UNAUTHORIZED", message: "Authentication required" },
+				{ status: 401 },
+			);
+		}
+
 		const [byStatus, byChannel] = await Promise.all([
 			prisma.notification.groupBy({
 				by: ["status"],
-				_count: { _all: true },
+				where: { userId },
+				_count: { status: true },
 			}),
 			prisma.notification.groupBy({
 				by: ["channel"],
-				_count: { _all: true },
+				where: { userId },
+				_count: { channel: true },
 			}),
 		]);
 
 		const count = (groups: typeof byStatus, key: string) =>
-			groups.find((g) => g.status === key)?._count._all ?? 0;
+			groups.find((g) => g.status === key)?._count.status ?? 0;
 
 		const countChannel = (groups: typeof byChannel, key: string) =>
-			groups.find((g) => g.channel === key)?._count._all ?? 0;
+			groups.find((g) => g.channel === key)?._count.channel ?? 0;
 
 		const sent = count(byStatus, "sent");
 		const failed = count(byStatus, "failed");
