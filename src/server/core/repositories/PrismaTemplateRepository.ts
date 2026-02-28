@@ -1,7 +1,4 @@
-import type {
-	PrismaClient,
-	Template as PrismaTemplate,
-} from "@prisma/client";
+import type { PrismaClient, Template as PrismaTemplate } from "@prisma/client";
 import { type Result, ok, fail } from "../domain/result/Result";
 import { type DomainError } from "../domain/errors/DomainError";
 import {

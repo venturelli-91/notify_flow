@@ -1,9 +1,6 @@
 import { type Result } from "../result/Result";
 import { type DomainError } from "../errors/DomainError";
-import {
-	type Template,
-	type CreateTemplateInput,
-} from "../entities/Template";
+import { type Template, type CreateTemplateInput } from "../entities/Template";
 
 /**
  * ITemplateWriter — ISP: used exclusively by write-side consumers.
