@@ -258,7 +258,7 @@ export async function POST(req: NextRequest) {
 
 		let title = parsed.data.title ?? "";
 		let body = parsed.data.body ?? "";
-		let templateId: string | undefined = parsed.data.templateId;
+		const templateId: string | undefined = parsed.data.templateId;
 
 		// If templateId provided, render the template
 		if (parsed.data.templateId) {

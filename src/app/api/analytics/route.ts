@@ -48,9 +48,7 @@ export async function GET(req: NextRequest) {
 		const pending = count(byStatus, "pending");
 		const total = sent + failed + pending;
 		const deliveryRate =
-			sent + failed > 0
-				? Math.round((sent / (sent + failed)) * 100)
-				: null;
+			sent + failed > 0 ? Math.round((sent / (sent + failed)) * 100) : null;
 
 		return NextResponse.json({
 			data: {

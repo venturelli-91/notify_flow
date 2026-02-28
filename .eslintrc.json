@@ -1,5 +1,41 @@
 {
 	"extends": ["next/core-web-vitals", "next/typescript"],
+	"plugins": ["boundaries"],
+	"settings": {
+		"boundaries/elements": [
+			{
+				"type": "core",
+				"pattern": "src/server/core/**/*",
+				"mode": "full"
+			},
+			{
+				"type": "lib",
+				"pattern": "src/server/lib/**/*",
+				"mode": "full"
+			},
+			{
+				"type": "workers",
+				"pattern": "src/server/workers/**/*",
+				"mode": "full"
+			},
+			{
+				"type": "app",
+				"pattern": "src/app/**/*",
+				"mode": "full"
+			},
+			{
+				"type": "client",
+				"pattern": "src/client/**/*",
+				"mode": "full"
+			},
+			{
+				"type": "shared",
+				"pattern": ["src/lib/**/*", "src/middleware.ts"],
+				"mode": "full"
+			}
+		],
+		"boundaries/ignore": ["**/*.test.ts", "**/*.test.tsx", "**/tests/**"]
+	},
 	"rules": {
 		"@typescript-eslint/no-unused-vars": [
 			"error",
@@ -8,6 +44,73 @@
 				"varsIgnorePattern": "^_",
 				"caughtErrorsIgnorePattern": "^_"
 			}
-		]
-	}
+		],
+		"boundaries/element-types": [
+			"error",
+			{
+				"default": "allow",
+				"rules": [
+					{
+						"from": ["core"],
+						"disallow": [
+							["lib"],
+							["app"],
+							["client"],
+							["workers"],
+							["shared"]
+						],
+						"message": "Core domain must not depend on infrastructure (lib), framework (app), UI (client), workers, or shared utilities. See ADR 003."
+					},
+					{
+						"from": ["lib"],
+						"allow": [["core"], ["lib"]],
+						"disallow": [["app"], ["client"], ["workers"]],
+						"message": "Infrastructure layer (lib) can only import from core domain and other lib modules."
+					},
+					{
+						"from": ["workers"],
+						"allow": [["core"], ["lib"], ["workers"]],
+						"disallow": [["app"], ["client"]],
+						"message": "Workers can import from core, lib, and other workers, but not from app or client."
+					}
+				]
+			}
+		],
+		"boundaries/no-unknown": "off",
+		"boundaries/no-unknown-files": "off"
+	},
+	"overrides": [
+		{
+			"files": ["src/server/core/**/*"],
+			"excludedFiles": [
+				"src/server/core/repositories/**/*",
+				"src/server/core/channels/**/*"
+			],
+			"rules": {
+				"no-restricted-imports": [
+					"error",
+					{
+						"patterns": [
+							{
+								"group": ["next", "next/*"],
+								"message": "Next.js imports not allowed in core domain (except repositories/channels). See ADR 003."
+							},
+							{
+								"group": ["@prisma/*", "prisma"],
+								"message": "Prisma imports not allowed in core domain (except repositories). See ADR 003."
+							},
+							{
+								"group": ["ioredis", "bullmq", "nodemailer"],
+								"message": "Infrastructure libraries not allowed in core domain (except channels). See ADR 003."
+							},
+							{
+								"group": ["@server/lib/*", "../lib/*", "../../lib/*", "../../../lib/*"],
+								"message": "Core domain cannot import from infrastructure layer (lib). See ADR 003."
+							}
+						]
+					}
+				]
+			}
+		}
+	]
 }
