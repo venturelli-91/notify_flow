@@ -56,39 +56,51 @@ This architectural boundary is enforced automatically via ESLint:
 ```json
 // .eslintrc.json
 {
-  "plugins": ["boundaries"],
-  "rules": {
-    "boundaries/element-types": [
-      "error",
-      {
-        "rules": [
-          {
-            "from": ["core"],
-            "disallow": [["lib"], ["app"], ["client"], ["workers"]],
-            "message": "Core domain must not depend on infrastructure, framework, UI, or workers. See ADR 003."
-          }
-        ]
-      }
-    ]
-  },
-  "overrides": [
-    {
-      "files": ["src/server/core/**/*"],
-      "excludedFiles": ["src/server/core/repositories/**/*", "src/server/core/channels/**/*"],
-      "rules": {
-        "no-restricted-imports": [
-          "error",
-          {
-            "patterns": [
-              { "group": ["next", "next/*"], "message": "Next.js not allowed in core domain. See ADR 003." },
-              { "group": ["@prisma/*"], "message": "Prisma not allowed in core domain. See ADR 003." },
-              { "group": ["ioredis", "bullmq", "nodemailer"], "message": "Infrastructure libs not allowed. See ADR 003." }
-            ]
-          }
-        ]
-      }
-    }
-  ]
+	"plugins": ["boundaries"],
+	"rules": {
+		"boundaries/element-types": [
+			"error",
+			{
+				"rules": [
+					{
+						"from": ["core"],
+						"disallow": [["lib"], ["app"], ["client"], ["workers"]],
+						"message": "Core domain must not depend on infrastructure, framework, UI, or workers. See ADR 003."
+					}
+				]
+			}
+		]
+	},
+	"overrides": [
+		{
+			"files": ["src/server/core/**/*"],
+			"excludedFiles": [
+				"src/server/core/repositories/**/*",
+				"src/server/core/channels/**/*"
+			],
+			"rules": {
+				"no-restricted-imports": [
+					"error",
+					{
+						"patterns": [
+							{
+								"group": ["next", "next/*"],
+								"message": "Next.js not allowed in core domain. See ADR 003."
+							},
+							{
+								"group": ["@prisma/*"],
+								"message": "Prisma not allowed in core domain. See ADR 003."
+							},
+							{
+								"group": ["ioredis", "bullmq", "nodemailer"],
+								"message": "Infrastructure libs not allowed. See ADR 003."
+							}
+						]
+					}
+				]
+			}
+		}
+	]
 }
 ```
 

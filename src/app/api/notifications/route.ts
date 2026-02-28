@@ -226,15 +226,15 @@ export async function POST(req: NextRequest) {
 		}
 
 		// Parse body
-		let body: unknown;
+		let requestBody: unknown;
 		try {
-			body = await req.json();
+			requestBody = await req.json();
 		} catch {
 			return NextResponse.json({ error: "INVALID_JSON" }, { status: 400 });
 		}
 
 		// Validate
-		const parsed = SendNotificationSchema.safeParse(body);
+		const parsed = SendNotificationSchema.safeParse(requestBody);
 		if (!parsed.success) {
 			return NextResponse.json(
 				{
@@ -322,16 +322,33 @@ export async function POST(req: NextRequest) {
 		try {
 			const job = await notificationQueue.add("send", {
 				notificationId: notification.id,
-				...parsed.data,
+				title,
+				body,
+				channel: parsed.data.channel,
+				metadata: parsed.data.metadata,
 				correlationId,
 			});
 			jobId = job.id;
 		} catch (err) {
 			const msg = err instanceof Error ? err.message : "Queue unavailable";
-			logger.error("Failed to enqueue notification", { error: msg, ip });
-			// Record is already in DB as "pending" — worker retry not possible,
-			// so mark it failed immediately.
-			await notificationService.deliver(notification);
+			logger.error("Failed to enqueue notification", {
+				error: msg,
+				ip,
+				notificationId: notification.id,
+			});
+
+			// Rollback: delete the orphaned record since it will never be processed
+			const deleteResult = await notificationService.softDelete(
+				notification.id,
+				userId,
+			);
+			if (!deleteResult.ok) {
+				logger.error("Failed to rollback notification after enqueue failure", {
+					notificationId: notification.id,
+					error: deleteResult.error.message,
+				});
+			}
+
 			return NextResponse.json({ error: "QUEUE_UNAVAILABLE" }, { status: 503 });
 		}
 

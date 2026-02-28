@@ -52,13 +52,7 @@
 				"rules": [
 					{
 						"from": ["core"],
-						"disallow": [
-							["lib"],
-							["app"],
-							["client"],
-							["workers"],
-							["shared"]
-						],
+						"disallow": [["lib"], ["app"], ["client"], ["workers"], ["shared"]],
 						"message": "Core domain must not depend on infrastructure (lib), framework (app), UI (client), workers, or shared utilities. See ADR 003."
 					},
 					{
@@ -104,7 +98,12 @@
 								"message": "Infrastructure libraries not allowed in core domain (except channels). See ADR 003."
 							},
 							{
-								"group": ["@server/lib/*", "../lib/*", "../../lib/*", "../../../lib/*"],
+								"group": [
+									"@server/lib/*",
+									"../lib/*",
+									"../../lib/*",
+									"../../../lib/*"
+								],
 								"message": "Core domain cannot import from infrastructure layer (lib). See ADR 003."
 							}
 						]
