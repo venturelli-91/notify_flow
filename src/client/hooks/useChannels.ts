@@ -11,7 +11,9 @@ export type Channel = {
 // ── Fetcher ───────────────────────────────────────────────────────────────────
 
 async function fetchChannels(): Promise<Channel[]> {
-	const res = await fetch("/api/channels");
+	const res = await fetch("/api/channels", {
+		credentials: "include",
+	});
 	if (!res.ok) throw new Error("Failed to fetch channels");
 	const json = (await res.json()) as { data: Channel[] };
 	return json.data;

@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { queryKeys } from "@client/lib/queryKeys";
 import type { Notification } from "@server/core/domain/entities/Notification";
@@ -12,8 +13,6 @@ export type SendPayload = {
 	readonly metadata?: Record<string, unknown>;
 };
 
-// ── Fetchers ──────────────────────────────────────────────────────────────────
-
 type PaginatedResponse = {
 	data: Notification[];
 	total: number;
@@ -22,27 +21,11 @@ type PaginatedResponse = {
 	hasMore: boolean;
 };
 
-async function fetchNotifications(page = 1, limit = 20): Promise<PaginatedResponse> {
-	const res = await fetch(`/api/notifications?page=${page}&limit=${limit}`);
-	if (!res.ok) throw new Error("Failed to fetch notifications");
-	return (await res.json()) as PaginatedResponse;
-}
-
 /** Returned by POST /api/notifications (202 Accepted — job was enqueued). */
 type EnqueuedJob = {
 	readonly jobId: string | undefined;
 	readonly correlationId: string;
 };
-
-async function sendNotification(payload: SendPayload): Promise<EnqueuedJob> {
-	const res = await fetch("/api/notifications", {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify(payload),
-	});
-	if (!res.ok) throw new Error("Failed to send notification");
-	return (await res.json()) as EnqueuedJob;
-}
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
 
@@ -58,11 +41,36 @@ async function sendNotification(payload: SendPayload): Promise<EnqueuedJob> {
  */
 export function useNotifications(page = 1) {
 	const queryClient = useQueryClient();
+	const { data: session } = useSession();
+
+	// Fetch notifications with session cookies
+	async function fetchNotifications(): Promise<PaginatedResponse> {
+		const res = await fetch(`/api/notifications?page=${page}&limit=20`, {
+			credentials: "include", // Send cookies with request
+		});
+		if (!res.ok) throw new Error("Failed to fetch notifications");
+		return (await res.json()) as PaginatedResponse;
+	}
+
+	// Send notification with session cookies
+	async function sendNotification(payload: SendPayload): Promise<EnqueuedJob> {
+		const res = await fetch("/api/notifications", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(payload),
+			credentials: "include", // Send cookies with request
+		});
+		if (!res.ok) throw new Error("Failed to send notification");
+		return (await res.json()) as EnqueuedJob;
+	}
 
 	const query = useQuery({
 		queryKey: queryKeys.notifications.list(page),
-		queryFn: () => fetchNotifications(page),
+		queryFn: fetchNotifications,
 		select: (data) => data.data, // Extract just the items array for display
+		enabled: !!session, // Only run query if session exists
 	});
 
 	const mutation = useMutation({

@@ -13,6 +13,7 @@ async function bulkAction(
 		method: "PATCH",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({ action }),
+		credentials: "include",
 	});
 	if (!res.ok) throw new Error(`Failed to ${action}`);
 }

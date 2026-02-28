@@ -155,6 +155,7 @@ export function NotificationCard({ notification }: NotificationCardProps) {
 			const res = await fetch(`/api/notifications/${notification.id}/retry`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
+				credentials: "include",
 			});
 			if (!res.ok) throw new Error("Failed to retry notification");
 		},
@@ -169,6 +170,7 @@ export function NotificationCard({ notification }: NotificationCardProps) {
 		mutationFn: async () => {
 			const res = await fetch(`/api/notifications/${notification.id}`, {
 				method: "DELETE",
+				credentials: "include",
 			});
 			if (!res.ok) throw new Error("Failed to delete notification");
 		},

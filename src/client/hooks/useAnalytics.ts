@@ -19,7 +19,9 @@ export type AnalyticsSummary = {
 // ── Fetcher ───────────────────────────────────────────────────────────────────
 
 async function fetchAnalytics(): Promise<AnalyticsSummary> {
-	const res = await fetch("/api/analytics");
+	const res = await fetch("/api/analytics", {
+		credentials: "include",
+	});
 	if (!res.ok) throw new Error("Failed to fetch analytics");
 	const json = (await res.json()) as { data: AnalyticsSummary };
 	return json.data;
