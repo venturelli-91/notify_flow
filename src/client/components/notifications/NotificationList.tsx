@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useNotifications } from "@client/hooks/useNotifications";
 import { NotificationCard } from "@client/components/notifications/NotificationCard";
@@ -78,6 +79,11 @@ export function NotificationList() {
 			<div className="rounded-xl bg-gray-50 border border-gray-200 px-5 py-10 text-center">
 				<p className="text-sm font-medium text-gray-600">No notifications yet</p>
 				<p className="mt-1 text-xs text-gray-400">Send your first notification to get started.</p>
+				<Link
+					href="/send"
+					className="mt-4 inline-block rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700 transition-colors">
+					Send your first notification →
+				</Link>
 			</div>
 		);
 	}
