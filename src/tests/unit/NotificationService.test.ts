@@ -53,7 +53,14 @@ function makeReader(
 	findByIdInternal: Mock;
 } {
 	return {
-		findAll: vi.fn().mockResolvedValue(ok([notification])),
+		findAll: vi.fn().mockResolvedValue(
+			ok({
+				items: [notification],
+				total: 1,
+				page: 1,
+				limit: 20,
+			}),
+		),
 		findById: vi.fn().mockResolvedValue(ok(notification)),
 		findByIdInternal: vi.fn().mockResolvedValue(ok(notification)),
 	};
@@ -208,8 +215,11 @@ describe("NotificationService.findAll()", () => {
 		const result = await service.findAll("user-1");
 
 		expect(result.ok).toBe(true);
-		expect(reader.findAll).toHaveBeenCalledWith("user-1");
-		if (result.ok) expect(result.value).toEqual([notification]);
+		expect(reader.findAll).toHaveBeenCalledWith("user-1", undefined, undefined);
+		if (result.ok) {
+			expect(result.value.items).toEqual([notification]);
+			expect(result.value.total).toBe(1);
+		}
 	});
 });
 

@@ -16,7 +16,9 @@ export async function GET(req: NextRequest) {
 		// x-user-id is injected by middleware from the verified JWT (spoofing-safe).
 		const userId =
 			req.headers.get("x-user-id") ??
-			((await getToken({ req, secret: env.NEXTAUTH_SECRET }))?.id as string | undefined);
+			((await getToken({ req, secret: env.NEXTAUTH_SECRET }))?.id as
+				| string
+				| undefined);
 
 		if (!userId) {
 			return NextResponse.json(
@@ -38,11 +40,13 @@ export async function GET(req: NextRequest) {
 			}),
 		]);
 
-		const count = (groups: typeof byStatus, key: string) =>
-			groups.find((g) => g.status === key)?._count.status ?? 0;
+		const count = (groups: typeof byStatus, key: string): number =>
+			groups.find((g: (typeof byStatus)[number]) => g.status === key)?._count
+				.status ?? 0;
 
-		const countChannel = (groups: typeof byChannel, key: string) =>
-			groups.find((g) => g.channel === key)?._count.channel ?? 0;
+		const countChannel = (groups: typeof byChannel, key: string): number =>
+			groups.find((g: (typeof byChannel)[number]) => g.channel === key)?._count
+				.channel ?? 0;
 
 		const sent = count(byStatus, "sent");
 		const failed = count(byStatus, "failed");
