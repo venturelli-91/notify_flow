@@ -17,6 +17,7 @@ import {
 	type NotificationStatus,
 	type CreateNotificationInput,
 } from "../domain/entities/Notification";
+import { type PaginatedResult } from "../domain/interfaces/INotificationReader";
 
 /**
  * PrismaNotificationRepository — infrastructure adapter.
@@ -34,13 +35,30 @@ export class PrismaNotificationRepository
 
 	// ── INotificationReader ──────────────────────────────────────────────────
 
-	async findAll(userId: string): Promise<Result<Notification[], DomainError>> {
+	async findAll(
+		userId: string,
+		page = 1,
+		limit = 20,
+	): Promise<Result<PaginatedResult<Notification>, DomainError>> {
 		try {
-			const rows = await this.prisma.notification.findMany({
-				where: { userId },
-				orderBy: { createdAt: "desc" },
+			const skip = (page - 1) * limit;
+
+			const [rows, total] = await Promise.all([
+				this.prisma.notification.findMany({
+					where: { userId },
+					orderBy: { createdAt: "desc" },
+					skip,
+					take: limit,
+				}),
+				this.prisma.notification.count({ where: { userId } }),
+			]);
+
+			return ok({
+				items: rows.map(toDomain),
+				total,
+				page,
+				limit,
 			});
-			return ok(rows.map(toDomain));
 		} catch (err) {
 			return fail(new DatabaseError(err));
 		}

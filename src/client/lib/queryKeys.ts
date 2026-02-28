@@ -7,7 +7,7 @@
 export const queryKeys = {
 	notifications: {
 		all: ["notifications"] as const,
-		list: () => [...queryKeys.notifications.all, "list"] as const,
+		list: (page = 1) => [...queryKeys.notifications.all, "list", page] as const,
 	},
 	channels: {
 		all: ["channels"] as const,

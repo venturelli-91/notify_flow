@@ -2,7 +2,7 @@ import { type Result, ok, fail } from "../domain/result/Result";
 import { type DomainError } from "../domain/errors/DomainError";
 import { ChannelUnavailable } from "../domain/errors/NotificationErrors";
 import { type INotificationChannel } from "../domain/interfaces/INotificationChannel";
-import { type INotificationReader } from "../domain/interfaces/INotificationReader";
+import { type INotificationReader, type PaginatedResult } from "../domain/interfaces/INotificationReader";
 import { type INotificationWriter } from "../domain/interfaces/INotificationWriter";
 import {
 	type Notification,
@@ -75,8 +75,12 @@ export class NotificationService {
 		return ok(updateResult.value);
 	}
 
-	async findAll(userId: string): Promise<Result<Notification[], DomainError>> {
-		return this.reader.findAll(userId);
+	async findAll(
+		userId: string,
+		page?: number,
+		limit?: number,
+	): Promise<Result<PaginatedResult<Notification>, DomainError>> {
+		return this.reader.findAll(userId, page, limit);
 	}
 
 	async findById(

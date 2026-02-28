@@ -14,11 +14,18 @@ export type SendPayload = {
 
 // ── Fetchers ──────────────────────────────────────────────────────────────────
 
-async function fetchNotifications(): Promise<Notification[]> {
-	const res = await fetch("/api/notifications");
+type PaginatedResponse = {
+	data: Notification[];
+	total: number;
+	page: number;
+	limit: number;
+	hasMore: boolean;
+};
+
+async function fetchNotifications(page = 1, limit = 20): Promise<PaginatedResponse> {
+	const res = await fetch(`/api/notifications?page=${page}&limit=${limit}`);
 	if (!res.ok) throw new Error("Failed to fetch notifications");
-	const json = (await res.json()) as { data: Notification[] };
-	return json.data;
+	return (await res.json()) as PaginatedResponse;
 }
 
 /** Returned by POST /api/notifications (202 Accepted — job was enqueued). */
@@ -49,12 +56,13 @@ async function sendNotification(payload: SendPayload): Promise<EnqueuedJob> {
  *              onError   → rollback to snapshot
  *              onSettled → invalidate to sync with server
  */
-export function useNotifications() {
+export function useNotifications(page = 1) {
 	const queryClient = useQueryClient();
 
 	const query = useQuery({
-		queryKey: queryKeys.notifications.list(),
-		queryFn: fetchNotifications,
+		queryKey: queryKeys.notifications.list(page),
+		queryFn: () => fetchNotifications(page),
+		select: (data) => data.data, // Extract just the items array for display
 	});
 
 	const mutation = useMutation({
@@ -63,11 +71,11 @@ export function useNotifications() {
 		onMutate: async (payload) => {
 			// Cancel in-flight refetches to prevent overwriting the optimistic state
 			await queryClient.cancelQueries({
-				queryKey: queryKeys.notifications.list(),
+				queryKey: queryKeys.notifications.list(page),
 			});
 
 			const previous = queryClient.getQueryData<Notification[]>(
-				queryKeys.notifications.list(),
+				queryKeys.notifications.list(page),
 			);
 
 			// Inject a synthetic entry at the top of the list
@@ -87,7 +95,7 @@ export function useNotifications() {
 			};
 
 			queryClient.setQueryData<Notification[]>(
-				queryKeys.notifications.list(),
+				queryKeys.notifications.list(page),
 				(old) => [optimistic, ...(old ?? [])],
 			);
 
@@ -97,7 +105,7 @@ export function useNotifications() {
 		onError: (_err, _payload, context) => {
 			if (context?.previous !== undefined) {
 				queryClient.setQueryData(
-					queryKeys.notifications.list(),
+					queryKeys.notifications.list(page),
 					context.previous,
 				);
 			}
@@ -106,7 +114,7 @@ export function useNotifications() {
 
 		onSettled: () => {
 			void queryClient.invalidateQueries({
-				queryKey: queryKeys.notifications.list(),
+				queryKey: queryKeys.notifications.list(page),
 			});
 		},
 	});

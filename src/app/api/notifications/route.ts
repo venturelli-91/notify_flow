@@ -114,7 +114,11 @@ export async function GET(req: NextRequest) {
 			);
 		}
 
-		const result = await notificationService.findAll(userId);
+		// Parse pagination parameters
+		const page = Math.max(1, parseInt(req.nextUrl.searchParams.get("page") ?? "1", 10));
+		const limit = Math.max(1, parseInt(req.nextUrl.searchParams.get("limit") ?? "20", 10));
+
+		const result = await notificationService.findAll(userId, page, limit);
 		const ms = Date.now() - start;
 
 		if (!result.ok) {
@@ -128,8 +132,18 @@ export async function GET(req: NextRequest) {
 			);
 		}
 
-		logger.info("Listed notifications", { count: result.value.length, ms });
-		return NextResponse.json({ data: result.value, correlationId });
+		const { items, total, page: currentPage, limit: currentLimit } = result.value;
+		const hasMore = currentPage * currentLimit < total;
+
+		logger.info("Listed notifications", { count: items.length, total, page, limit, ms });
+		return NextResponse.json({
+			data: items,
+			total,
+			page: currentPage,
+			limit: currentLimit,
+			hasMore,
+			correlationId,
+		});
 	});
 }
 
