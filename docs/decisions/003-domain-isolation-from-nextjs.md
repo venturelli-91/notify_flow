@@ -41,11 +41,58 @@ concrete instances are assembled in `src/server/lib/container.ts`.
 - The domain could be extracted to a separate npm package with zero changes.
 - Mirrors Clean Architecture's dependency rule: inner layers know nothing of
   outer layers.
+- **Automated enforcement**: ESLint with `eslint-plugin-boundaries` prevents
+  violations at development time and in CI/CD.
 
 **Negative**
 
 - Requires developer discipline (and ideally an ESLint boundary rule) to
   prevent accidental framework imports into `src/server/core/`.
+
+## Enforcement
+
+This architectural boundary is enforced automatically via ESLint:
+
+```json
+// .eslintrc.json
+{
+  "plugins": ["boundaries"],
+  "rules": {
+    "boundaries/element-types": [
+      "error",
+      {
+        "rules": [
+          {
+            "from": ["core"],
+            "disallow": [["lib"], ["app"], ["client"], ["workers"]],
+            "message": "Core domain must not depend on infrastructure, framework, UI, or workers. See ADR 003."
+          }
+        ]
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["src/server/core/**/*"],
+      "excludedFiles": ["src/server/core/repositories/**/*", "src/server/core/channels/**/*"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              { "group": ["next", "next/*"], "message": "Next.js not allowed in core domain. See ADR 003." },
+              { "group": ["@prisma/*"], "message": "Prisma not allowed in core domain. See ADR 003." },
+              { "group": ["ioredis", "bullmq", "nodemailer"], "message": "Infrastructure libs not allowed. See ADR 003." }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+Run `npm run lint` to verify compliance. Any violation will fail the build.
 
 ## Files
 
