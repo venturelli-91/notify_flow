@@ -338,7 +338,7 @@ export async function POST(req: NextRequest) {
 			});
 
 			// Rollback: delete the orphaned record since it will never be processed
-			const deleteResult = await notificationService.softDelete(
+			const deleteResult = await notificationService.markAsDeleted(
 				notification.id,
 				userId,
 			);

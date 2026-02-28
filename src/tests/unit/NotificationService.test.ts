@@ -180,7 +180,11 @@ describe("NotificationService.findAll()", () => {
 	it("delegates to reader.findAll()", async () => {
 		const notification = makeNotification();
 		const reader = makeReader(notification);
-		const service = new NotificationService([], makeWriter(notification), reader);
+		const service = new NotificationService(
+			[],
+			makeWriter(notification),
+			reader,
+		);
 
 		const result = await service.findAll();
 
@@ -194,7 +198,11 @@ describe("NotificationService.findById()", () => {
 	it("delegates to reader.findById()", async () => {
 		const notification = makeNotification({ id: "notif-42" });
 		const reader = makeReader(notification);
-		const service = new NotificationService([], makeWriter(notification), reader);
+		const service = new NotificationService(
+			[],
+			makeWriter(notification),
+			reader,
+		);
 
 		const result = await service.findById("notif-42");
 
@@ -209,7 +217,11 @@ describe("NotificationService.markAllRead()", () => {
 	it("delegates to writer.markAllRead()", async () => {
 		const notification = makeNotification();
 		const writer = makeWriter(notification);
-		const service = new NotificationService([], writer, makeReader(notification));
+		const service = new NotificationService(
+			[],
+			writer,
+			makeReader(notification),
+		);
 
 		const result = await service.markAllRead();
 
@@ -222,7 +234,11 @@ describe("NotificationService.markAllUnread()", () => {
 	it("delegates to writer.markAllUnread()", async () => {
 		const notification = makeNotification();
 		const writer = makeWriter(notification);
-		const service = new NotificationService([], writer, makeReader(notification));
+		const service = new NotificationService(
+			[],
+			writer,
+			makeReader(notification),
+		);
 
 		const result = await service.markAllUnread();
 
@@ -235,7 +251,11 @@ describe("NotificationService.retry()", () => {
 	it("calls writer.updateStatus with 'pending'", async () => {
 		const notification = makeNotification({ id: "notif-5" });
 		const writer = makeWriter(notification);
-		const service = new NotificationService([], writer, makeReader(notification));
+		const service = new NotificationService(
+			[],
+			writer,
+			makeReader(notification),
+		);
 
 		await service.retry("notif-5");
 
@@ -243,13 +263,17 @@ describe("NotificationService.retry()", () => {
 	});
 });
 
-describe("NotificationService.softDelete()", () => {
+describe("NotificationService.markAsDeleted()", () => {
 	it("calls writer.delete with the given id", async () => {
 		const notification = makeNotification({ id: "notif-9" });
 		const writer = makeWriter(notification);
-		const service = new NotificationService([], writer, makeReader(notification));
+		const service = new NotificationService(
+			[],
+			writer,
+			makeReader(notification),
+		);
 
-		const result = await service.softDelete("notif-9");
+		const result = await service.markAsDeleted("notif-9", "user-1");
 
 		expect(result.ok).toBe(true);
 		expect(writer.delete).toHaveBeenCalledWith("notif-9");

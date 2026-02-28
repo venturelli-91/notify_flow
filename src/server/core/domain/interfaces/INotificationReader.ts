@@ -12,4 +12,11 @@ export interface INotificationReader {
 		id: string,
 		userId: string,
 	): Promise<Result<Notification, DomainError>>;
+
+	/**
+	 * findByIdInternal — Internal method for worker/background job access.
+	 * ⚠️ Bypasses userId isolation. Should ONLY be used by worker processes,
+	 * never exposed through API routes.
+	 */
+	findByIdInternal(id: string): Promise<Result<Notification, DomainError>>;
 }

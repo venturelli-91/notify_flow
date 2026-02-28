@@ -107,7 +107,11 @@ export class NotificationService {
 		return this.writer.updateStatus(id, "pending", userId);
 	}
 
-	async softDelete(
+	/**
+	 * markAsDeleted — Permanently delete a notification.
+	 * The record is removed from the database (hard delete).
+	 */
+	async markAsDeleted(
 		id: string,
 		userId: string,
 	): Promise<Result<void, DomainError>> {

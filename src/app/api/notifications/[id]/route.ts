@@ -85,7 +85,7 @@ export async function DELETE(
 			);
 		}
 
-		const deleteResult = await notificationService.softDelete(id, userId);
+		const deleteResult = await notificationService.markAsDeleted(id, userId);
 
 		if (!deleteResult.ok) {
 			return NextResponse.json(

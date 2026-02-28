@@ -34,9 +34,10 @@ export class PrismaNotificationRepository
 
 	// ── INotificationReader ──────────────────────────────────────────────────
 
-	async findAll(): Promise<Result<Notification[], DomainError>> {
+	async findAll(userId: string): Promise<Result<Notification[], DomainError>> {
 		try {
 			const rows = await this.prisma.notification.findMany({
+				where: { userId },
 				orderBy: { createdAt: "desc" },
 			});
 			return ok(rows.map(toDomain));
@@ -102,19 +103,19 @@ export class PrismaNotificationRepository
 		userId: string,
 	): Promise<Result<Notification, DomainError>> {
 		try {
-			const row = await this.prisma.notification.updateMany({
+			// Atomic operation: update with where clause ensures isolation
+			const updated = await this.prisma.notification.update({
 				where: { id, userId },
 				data: { status },
 			});
-			if (row.count === 0) return fail(new NotificationNotFound(id));
-
-			// Fetch the updated record
-			const updated = await this.prisma.notification.findFirst({
-				where: { id, userId },
-			});
-			if (!updated) return fail(new NotificationNotFound(id));
 			return ok(toDomain(updated));
 		} catch (err) {
+			if (
+				err instanceof Prisma.PrismaClientKnownRequestError &&
+				err.code === "P2025"
+			) {
+				return fail(new NotificationNotFound(id));
+			}
 			return fail(new DatabaseError(err));
 		}
 	}
