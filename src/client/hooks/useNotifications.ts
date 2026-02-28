@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { queryKeys } from "@client/lib/queryKeys";
 import type { Notification } from "@server/core/domain/entities/Notification";
 
@@ -100,6 +101,7 @@ export function useNotifications() {
 					context.previous,
 				);
 			}
+			toast.error("Failed to send notification");
 		},
 
 		onSettled: () => {

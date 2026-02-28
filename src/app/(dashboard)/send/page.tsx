@@ -40,6 +40,9 @@ export default function SendPage() {
 					});
 					router.push("/");
 				},
+				onError: () => {
+					toast.error("Failed to send notification. Please try again.");
+				},
 			},
 		);
 	}

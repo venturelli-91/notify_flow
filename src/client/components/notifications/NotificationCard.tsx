@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { queryKeys } from "@client/lib/queryKeys";
 import type { Notification } from "@server/core/domain/entities/Notification";
 
@@ -156,6 +157,7 @@ export function NotificationCard({ notification }: NotificationCardProps) {
 			});
 			if (!res.ok) throw new Error("Failed to retry notification");
 		},
+		onError: () => toast.error("Failed to retry notification"),
 		onSettled: () =>
 			void queryClient.invalidateQueries({
 				queryKey: queryKeys.notifications.list(),
@@ -169,6 +171,7 @@ export function NotificationCard({ notification }: NotificationCardProps) {
 			});
 			if (!res.ok) throw new Error("Failed to delete notification");
 		},
+		onError: () => toast.error("Failed to delete notification"),
 		onSettled: () =>
 			void queryClient.invalidateQueries({
 				queryKey: queryKeys.notifications.list(),

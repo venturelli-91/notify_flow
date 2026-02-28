@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { queryKeys } from "@client/lib/queryKeys";
 
 async function bulkAction(
@@ -25,11 +26,13 @@ export function NotificationActions() {
 
 	const markAllReadMutation = useMutation({
 		mutationFn: () => bulkAction("mark_all_read"),
+		onError: () => toast.error("Failed to mark all as read"),
 		onSettled: invalidate,
 	});
 
 	const markAllUnreadMutation = useMutation({
 		mutationFn: () => bulkAction("mark_all_unread"),
+		onError: () => toast.error("Failed to mark all as unread"),
 		onSettled: invalidate,
 	});
 
