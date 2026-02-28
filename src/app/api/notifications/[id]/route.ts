@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@server/lib/auth";
+import { getToken } from "next-auth/jwt";
 import { notificationService } from "@server/lib/container";
 import { withCorrelationId } from "@server/lib/correlationId";
 import { logger } from "@server/lib/logger";
+import { env } from "@server/lib/env";
 
 // ── POST /api/notifications/[id]/retry ────────────────────────────────────────
 
@@ -17,9 +17,9 @@ export async function POST(
 
 		logger.info("POST /api/notifications/[id]/retry", { id });
 
-		// Get userId from session
-		const session = await getServerSession(authOptions);
-		const userId = session?.user?.id;
+		// Get userId from JWT token
+		const token = await getToken({ req, secret: env.NEXTAUTH_SECRET });
+		const userId = token?.id as string | undefined;
 
 		if (!userId) {
 			return NextResponse.json(
@@ -65,9 +65,9 @@ export async function DELETE(
 
 		logger.info("DELETE /api/notifications/[id]", { id });
 
-		// Get userId from session
-		const session = await getServerSession(authOptions);
-		const userId = session?.user?.id;
+		// Get userId from JWT token
+		const token = await getToken({ req, secret: env.NEXTAUTH_SECRET });
+		const userId = token?.id as string | undefined;
 
 		if (!userId) {
 			return NextResponse.json(

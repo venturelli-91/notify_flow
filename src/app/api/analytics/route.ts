@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@server/lib/auth";
+import { getToken } from "next-auth/jwt";
 import { prisma } from "@server/lib/prisma";
+import { env } from "@server/lib/env";
 import { withCorrelationId, getCorrelationId } from "@server/lib/correlationId";
 import { logger } from "@server/lib/logger";
 
@@ -13,9 +13,9 @@ export async function GET(req: NextRequest) {
 
 		logger.info("GET /api/analytics");
 
-		// Get userId from session
-		const session = await getServerSession(authOptions);
-		const userId = session?.user?.id;
+		// Get userId from JWT token
+		const token = await getToken({ req, secret: env.NEXTAUTH_SECRET });
+		const userId = token?.id as string | undefined;
 
 		if (!userId) {
 			return NextResponse.json(

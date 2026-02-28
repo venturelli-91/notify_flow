@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { z } from "zod";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@server/lib/auth";
+import { getToken } from "next-auth/jwt";
 import {
 	notificationService,
 	templateReader,
@@ -103,9 +102,9 @@ export async function GET(req: NextRequest) {
 			return authError;
 		}
 
-		// Get userId from session or API header
-		const session = await getServerSession(authOptions);
-		const userId = session?.user?.id ?? req.headers.get("x-user-id");
+		// Get userId from JWT token or API header
+		const token = await getToken({ req, secret: env.NEXTAUTH_SECRET });
+		const userId = (token?.id as string | undefined) ?? req.headers.get("x-user-id");
 
 		if (!userId) {
 			return NextResponse.json(
@@ -158,9 +157,9 @@ export async function PATCH(req: NextRequest) {
 		const authError = checkApiKey(req);
 		if (authError) return authError;
 
-		// Get userId from session or API header
-		const session = await getServerSession(authOptions);
-		const userId = session?.user?.id ?? req.headers.get("x-user-id");
+		// Get userId from JWT token or API header
+		const token = await getToken({ req, secret: env.NEXTAUTH_SECRET });
+		const userId = (token?.id as string | undefined) ?? req.headers.get("x-user-id");
 
 		if (!userId) {
 			return NextResponse.json(
@@ -214,9 +213,9 @@ export async function POST(req: NextRequest) {
 			return authError;
 		}
 
-		// Get userId from session or API header
-		const session = await getServerSession(authOptions);
-		const userId = session?.user?.id ?? req.headers.get("x-user-id");
+		// Get userId from JWT token or API header
+		const token = await getToken({ req, secret: env.NEXTAUTH_SECRET });
+		const userId = (token?.id as string | undefined) ?? req.headers.get("x-user-id");
 
 		if (!userId) {
 			return NextResponse.json(
