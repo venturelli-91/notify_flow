@@ -19,6 +19,7 @@ export interface Notification {
 	readonly metadata: Record<string, unknown> | null;
 	readonly correlationId: string | null;
 	readonly userId: string;
+	readonly templateId: string | null;
 	readonly createdAt: Date;
 	readonly updatedAt: Date;
 }
@@ -34,4 +35,5 @@ export interface CreateNotificationInput {
 	readonly metadata?: Record<string, unknown>;
 	readonly correlationId?: string;
 	readonly userId: string;
+	readonly templateId?: string;
 }

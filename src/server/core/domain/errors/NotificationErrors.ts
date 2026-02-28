@@ -13,6 +13,18 @@ export class NotificationNotFound extends DomainError {
 }
 
 /**
+ * Thrown when a template cannot be found by the given identifier.
+ */
+export class TemplateNotFound extends DomainError {
+	readonly code = "TEMPLATE_NOT_FOUND" as const;
+	readonly statusCode = 404;
+
+	constructor(idOrName: string) {
+		super(`Template "${idOrName}" was not found.`);
+	}
+}
+
+/**
  * Thrown when the requested delivery channel is not available
  * (e.g. missing config, external service unreachable, delivery failed).
  *

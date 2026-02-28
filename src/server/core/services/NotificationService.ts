@@ -44,12 +44,20 @@ export class NotificationService {
 	): Promise<Result<Notification, DomainError>> {
 		const channel = this.channels.find((c) => c.name === notification.channel);
 		if (!channel) {
-			await this.writer.updateStatus(notification.id, "failed", notification.userId);
+			await this.writer.updateStatus(
+				notification.id,
+				"failed",
+				notification.userId,
+			);
 			return fail(new ChannelUnavailable(notification.channel));
 		}
 
 		if (!channel.isAvailable()) {
-			await this.writer.updateStatus(notification.id, "failed", notification.userId);
+			await this.writer.updateStatus(
+				notification.id,
+				"failed",
+				notification.userId,
+			);
 			return fail(new ChannelUnavailable(channel.name));
 		}
 
@@ -71,11 +79,16 @@ export class NotificationService {
 		return this.reader.findAll(userId);
 	}
 
-	async findById(id: string, userId: string): Promise<Result<Notification, DomainError>> {
+	async findById(
+		id: string,
+		userId: string,
+	): Promise<Result<Notification, DomainError>> {
 		return this.reader.findById(id, userId);
 	}
 
-	async findByIdInternal(id: string): Promise<Result<Notification, DomainError>> {
+	async findByIdInternal(
+		id: string,
+	): Promise<Result<Notification, DomainError>> {
 		return this.reader.findByIdInternal(id);
 	}
 
@@ -87,11 +100,17 @@ export class NotificationService {
 		return this.writer.markAllUnread(userId);
 	}
 
-	async retry(id: string, userId: string): Promise<Result<Notification, DomainError>> {
+	async retry(
+		id: string,
+		userId: string,
+	): Promise<Result<Notification, DomainError>> {
 		return this.writer.updateStatus(id, "pending", userId);
 	}
 
-	async softDelete(id: string, userId: string): Promise<Result<void, DomainError>> {
+	async softDelete(
+		id: string,
+		userId: string,
+	): Promise<Result<void, DomainError>> {
 		return this.writer.delete(id, userId);
 	}
 }

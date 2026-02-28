@@ -45,7 +45,8 @@ const worker = new Worker<NotificationJobData>(
 			});
 
 			// Fetch the existing DB record created by the API route
-			const fetchResult = await notificationService.findByIdInternal(notificationId);
+			const fetchResult =
+				await notificationService.findByIdInternal(notificationId);
 			if (!fetchResult.ok) {
 				logger.error("Notification not found in DB", {
 					jobId: job.id,

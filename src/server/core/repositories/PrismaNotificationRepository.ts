@@ -45,10 +45,13 @@ export class PrismaNotificationRepository
 		}
 	}
 
-	async findById(id: string, userId: string): Promise<Result<Notification, DomainError>> {
+	async findById(
+		id: string,
+		userId: string,
+	): Promise<Result<Notification, DomainError>> {
 		try {
-			const row = await this.prisma.notification.findFirst({ 
-				where: { id, userId } 
+			const row = await this.prisma.notification.findFirst({
+				where: { id, userId },
 			});
 			if (!row) return fail(new NotificationNotFound(id));
 			return ok(toDomain(row));
@@ -57,7 +60,9 @@ export class PrismaNotificationRepository
 		}
 	}
 
-	async findByIdInternal(id: string): Promise<Result<Notification, DomainError>> {
+	async findByIdInternal(
+		id: string,
+	): Promise<Result<Notification, DomainError>> {
 		try {
 			const row = await this.prisma.notification.findUnique({ where: { id } });
 			if (!row) return fail(new NotificationNotFound(id));
@@ -82,6 +87,7 @@ export class PrismaNotificationRepository
 					metadata: input.metadata as Prisma.InputJsonValue | undefined,
 					correlationId: input.correlationId ?? null,
 					userId: input.userId,
+					templateId: input.templateId ?? null,
 				},
 			});
 			return ok(toDomain(row));
@@ -163,6 +169,7 @@ function toDomain(row: PrismaNotification): Notification {
 		metadata: row.metadata as Record<string, unknown> | null,
 		correlationId: row.correlationId,
 		userId: row.userId,
+		templateId: row.templateId,
 		createdAt: row.createdAt,
 		updatedAt: row.updatedAt,
 	};

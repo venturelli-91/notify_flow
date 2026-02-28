@@ -3,7 +3,11 @@ import { timingSafeEqual } from "crypto";
 import { z } from "zod";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@server/lib/auth";
-import { notificationService } from "@server/lib/container";
+import {
+	notificationService,
+	templateReader,
+	templateService,
+} from "@server/lib/container";
 import { notificationQueue } from "@server/lib/queue";
 import { withCorrelationId, getCorrelationId } from "@server/lib/correlationId";
 import { logger } from "@server/lib/logger";
@@ -12,10 +16,12 @@ import { isRateLimited, getRateLimitState } from "@server/lib/rateLimit";
 // ── Validation schema ─────────────────────────────────────────────────────────
 
 const SendNotificationSchema = z.object({
-	title: z.string().min(1).max(100),
-	body: z.string().min(1).max(1000),
+	title: z.string().min(1).max(100).optional(),
+	body: z.string().min(1).max(1000).optional(),
 	channel: z.enum(["email", "webhook", "in-app"]),
 	metadata: z.record(z.string(), z.unknown()).optional(),
+	templateId: z.string().optional(),
+	templateContext: z.record(z.string(), z.string()).optional(),
 });
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -239,11 +245,65 @@ export async function POST(req: NextRequest) {
 			);
 		}
 
+		// Either (title + body) OR templateId must be provided
+		if (!parsed.data.templateId && (!parsed.data.title || !parsed.data.body)) {
+			return NextResponse.json(
+				{
+					error: "INVALID_PAYLOAD",
+					message: "Either provide title+body or templateId",
+				},
+				{ status: 422 },
+			);
+		}
+
+		let title = parsed.data.title ?? "";
+		let body = parsed.data.body ?? "";
+		let templateId: string | undefined = parsed.data.templateId;
+
+		// If templateId provided, render the template
+		if (parsed.data.templateId) {
+			const templateResult = await templateReader.findById(
+				parsed.data.templateId,
+			);
+			if (!templateResult.ok) {
+				logger.error("Template not found", {
+					templateId: parsed.data.templateId,
+					error: templateResult.error.message,
+				});
+				return NextResponse.json(
+					{ error: templateResult.error.code },
+					{ status: templateResult.error.statusCode },
+				);
+			}
+
+			const template = templateResult.value;
+			const context = parsed.data.templateContext ?? {};
+
+			const renderResult = templateService.renderTemplate(template, context);
+			if (!renderResult.ok) {
+				logger.error("Template rendering failed", {
+					templateId: parsed.data.templateId,
+					error: renderResult.error.message,
+				});
+				return NextResponse.json(
+					{ error: renderResult.error.code },
+					{ status: renderResult.error.statusCode },
+				);
+			}
+
+			title = renderResult.value.subject;
+			body = renderResult.value.body;
+		}
+
 		// Persist the record immediately so it appears in the dashboard as "pending"
 		const createResult = await notificationService.createPending({
-			...parsed.data,
+			title,
+			body,
+			channel: parsed.data.channel,
+			metadata: parsed.data.metadata,
 			correlationId,
 			userId,
+			templateId,
 		});
 		if (!createResult.ok) {
 			logger.error("Failed to persist notification", {
