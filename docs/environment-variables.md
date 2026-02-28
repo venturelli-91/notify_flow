@@ -83,8 +83,8 @@ This is **intentional** — it's better to fail fast than to run with misconfigu
 
 ```typescript
 const EnvSchema = z.object({
-  // ... existing vars
-  MY_NEW_VAR: z.string().min(1, "MY_NEW_VAR is required"),
+	// ... existing vars
+	MY_NEW_VAR: z.string().min(1, "MY_NEW_VAR is required"),
 });
 ```
 
