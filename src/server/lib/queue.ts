@@ -1,4 +1,5 @@
 import { Queue } from "bullmq";
+import { env } from "./env";
 import type { NotificationChannel } from "@server/core/domain/entities/Notification";
 
 // ── Job payload ───────────────────────────────────────────────────────────────
@@ -23,7 +24,7 @@ export const NOTIFICATION_QUEUE = "notifications" as const;
 // conflict while still setting maxRetriesPerRequest: null as required.
 
 export function parseBullMQConnection() {
-	const raw = process.env["REDIS_URL"] ?? "redis://localhost:6379";
+	const raw = env.REDIS_URL;
 	const url = new URL(raw);
 	return {
 		host: url.hostname,

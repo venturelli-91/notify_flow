@@ -20,6 +20,7 @@ import { EmailChannel } from "@server/core/channels/EmailChannel";
 import { InAppChannel } from "@server/core/channels/InAppChannel";
 import { WebhookChannel } from "@server/core/channels/WebhookChannel";
 import { prisma } from "@server/lib/prisma";
+import { env } from "@server/lib/env";
 
 // ── Repository ────────────────────────────────────────────────────────────────
 // Single instance implements both INotificationReader and INotificationWriter.
@@ -36,16 +37,16 @@ export const templateService = new TemplateService(templateRenderer);
 // isAvailable() on each channel guards against missing env vars at runtime.
 
 const emailChannel = new EmailChannel({
-	host: process.env["SMTP_HOST"] ?? "",
-	port: Number(process.env["SMTP_PORT"] ?? "587"),
-	user: process.env["SMTP_USER"] ?? "",
-	pass: process.env["SMTP_PASS"] ?? "",
-	from: process.env["SMTP_FROM"] ?? "",
+	host: env.SMTP_HOST ?? "",
+	port: env.SMTP_PORT,
+	user: env.SMTP_USER ?? "",
+	pass: env.SMTP_PASS ?? "",
+	from: env.SMTP_FROM ?? "",
 });
 
 const webhookChannel = new WebhookChannel({
-	url: process.env["WEBHOOK_URL"] ?? "",
-	secret: process.env["WEBHOOK_SECRET"],
+	url: env.WEBHOOK_URL ?? "",
+	secret: env.WEBHOOK_SECRET,
 });
 
 const inAppChannel = new InAppChannel();

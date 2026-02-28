@@ -1,5 +1,6 @@
 import Redis from "ioredis";
 import { logger } from "./logger";
+import { env } from "./env";
 
 /**
  * Redis singleton — reuses the same connection across hot-reloads
@@ -14,7 +15,7 @@ const globalForRedis = globalThis as unknown as {
 };
 
 function createRedisClient(): Redis {
-	const url = process.env["REDIS_URL"] ?? "redis://localhost:6379";
+	const url = env.REDIS_URL;
 
 	const client = new Redis(url, {
 		maxRetriesPerRequest: 3,
@@ -36,6 +37,6 @@ function createRedisClient(): Redis {
 
 export const redis: Redis = globalForRedis.redis ?? createRedisClient();
 
-if (process.env["NODE_ENV"] !== "production") {
+if (env.NODE_ENV !== "production") {
 	globalForRedis.redis = redis;
 }

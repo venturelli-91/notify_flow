@@ -1,6 +1,7 @@
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@server/lib/prisma";
+import { env } from "@server/lib/env";
 import type { NextAuthOptions } from "next-auth";
 
 export const authOptions: NextAuthOptions = {
@@ -28,7 +29,7 @@ export const authOptions: NextAuthOptions = {
 	],
 	session: { strategy: "jwt" },
 	pages: { signIn: "/login" },
-	secret: process.env["NEXTAUTH_SECRET"],
+	secret: env.NEXTAUTH_SECRET,
 	callbacks: {
 		async jwt({ token, user }) {
 			if (user) {

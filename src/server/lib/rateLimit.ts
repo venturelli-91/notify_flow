@@ -13,9 +13,10 @@
  */
 
 import { redis } from "./redis";
+import { env } from "./env";
 
-const MAX = Number(process.env["RATE_LIMIT_MAX"] ?? 20);
-const WINDOW_S = Number(process.env["RATE_LIMIT_WINDOW_S"] ?? 60);
+const MAX = env.RATE_LIMIT_MAX;
+const WINDOW_S = env.RATE_LIMIT_WINDOW_S;
 const WINDOW_MS = WINDOW_S * 1_000;
 
 // ── Fallback in-memory store (used when Redis is unreachable) ─────────────────

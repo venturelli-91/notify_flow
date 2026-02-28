@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withCorrelationId, getCorrelationId } from "@server/lib/correlationId";
 import { logger } from "@server/lib/logger";
+import { env } from "@server/lib/env";
 
 /**
  * Channel availability is derived from environment variables, not from
@@ -11,14 +12,11 @@ import { logger } from "@server/lib/logger";
 const CHANNELS = [
 	{
 		name: "email" as const,
-		isAvailable:
-			!!process.env["SMTP_HOST"] &&
-			!!process.env["SMTP_USER"] &&
-			!!process.env["SMTP_PASS"],
+		isAvailable: !!env.SMTP_HOST && !!env.SMTP_USER && !!env.SMTP_PASS,
 	},
 	{
 		name: "webhook" as const,
-		isAvailable: !!process.env["WEBHOOK_URL"],
+		isAvailable: !!env.WEBHOOK_URL,
 	},
 	{
 		name: "in-app" as const,

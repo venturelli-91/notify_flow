@@ -1,6 +1,7 @@
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
+import { env } from "./env";
 
 /**
  * Prisma 7 requires a driver adapter — the connection URL is no longer
@@ -19,7 +20,7 @@ const globalForPrisma = globalThis as unknown as {
 
 function createPrismaClient(): PrismaClient {
 	const pool = new Pool({
-		connectionString: process.env["DATABASE_URL"],
+		connectionString: env.DATABASE_URL,
 	});
 
 	const adapter = new PrismaPg(pool);
@@ -27,15 +28,13 @@ function createPrismaClient(): PrismaClient {
 	return new PrismaClient({
 		adapter,
 		log:
-			process.env["NODE_ENV"] === "development"
-				? ["query", "error", "warn"]
-				: ["error"],
+			env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
 	});
 }
 
 export const prisma: PrismaClient =
 	globalForPrisma.prisma ?? createPrismaClient();
 
-if (process.env["NODE_ENV"] !== "production") {
+if (env.NODE_ENV !== "production") {
 	globalForPrisma.prisma = prisma;
 }
