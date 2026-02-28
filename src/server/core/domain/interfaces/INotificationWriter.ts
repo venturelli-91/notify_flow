@@ -18,9 +18,10 @@ export interface INotificationWriter {
 	updateStatus(
 		id: string,
 		status: NotificationStatus,
+		userId: string,
 	): Promise<Result<Notification, DomainError>>;
 
-	markAllRead(): Promise<Result<void, DomainError>>;
-	markAllUnread(): Promise<Result<void, DomainError>>;
-	delete(id: string): Promise<Result<void, DomainError>>;
+	markAllRead(userId: string): Promise<Result<void, DomainError>>;
+	markAllUnread(userId: string): Promise<Result<void, DomainError>>;
+	delete(id: string, userId: string): Promise<Result<void, DomainError>>;
 }

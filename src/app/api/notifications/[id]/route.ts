@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@server/lib/auth";
 import { notificationService } from "@server/lib/container";
 import { withCorrelationId } from "@server/lib/correlationId";
 import { logger } from "@server/lib/logger";
@@ -15,8 +17,19 @@ export async function POST(
 
 		logger.info("POST /api/notifications/[id]/retry", { id });
 
-		// Verify notification exists
-		const findResult = await notificationService.findById(id);
+		// Get userId from session
+		const session = await getServerSession(authOptions);
+		const userId = session?.user?.id;
+
+		if (!userId) {
+			return NextResponse.json(
+				{ error: "UNAUTHORIZED", message: "Authentication required" },
+				{ status: 401 },
+			);
+		}
+
+		// Verify notification exists and belongs to user
+		const findResult = await notificationService.findById(id, userId);
 		if (!findResult.ok) {
 			return NextResponse.json(
 				{ error: findResult.error.code },
@@ -24,7 +37,7 @@ export async function POST(
 			);
 		}
 
-		const updateResult = await notificationService.retry(id);
+		const updateResult = await notificationService.retry(id, userId);
 
 		if (!updateResult.ok) {
 			return NextResponse.json(
@@ -52,8 +65,19 @@ export async function DELETE(
 
 		logger.info("DELETE /api/notifications/[id]", { id });
 
-		// Verify notification exists
-		const findResult = await notificationService.findById(id);
+		// Get userId from session
+		const session = await getServerSession(authOptions);
+		const userId = session?.user?.id;
+
+		if (!userId) {
+			return NextResponse.json(
+				{ error: "UNAUTHORIZED", message: "Authentication required" },
+				{ status: 401 },
+			);
+		}
+
+		// Verify notification exists and belongs to user
+		const findResult = await notificationService.findById(id, userId);
 		if (!findResult.ok) {
 			return NextResponse.json(
 				{ error: findResult.error.code },
@@ -61,7 +85,7 @@ export async function DELETE(
 			);
 		}
 
-		const deleteResult = await notificationService.softDelete(id);
+		const deleteResult = await notificationService.softDelete(id, userId);
 
 		if (!deleteResult.ok) {
 			return NextResponse.json(

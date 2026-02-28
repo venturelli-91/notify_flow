@@ -45,7 +45,19 @@ export class PrismaNotificationRepository
 		}
 	}
 
-	async findById(id: string): Promise<Result<Notification, DomainError>> {
+	async findById(id: string, userId: string): Promise<Result<Notification, DomainError>> {
+		try {
+			const row = await this.prisma.notification.findFirst({ 
+				where: { id, userId } 
+			});
+			if (!row) return fail(new NotificationNotFound(id));
+			return ok(toDomain(row));
+		} catch (err) {
+			return fail(new DatabaseError(err));
+		}
+	}
+
+	async findByIdInternal(id: string): Promise<Result<Notification, DomainError>> {
 		try {
 			const row = await this.prisma.notification.findUnique({ where: { id } });
 			if (!row) return fail(new NotificationNotFound(id));
@@ -69,6 +81,7 @@ export class PrismaNotificationRepository
 					status: "pending",
 					metadata: input.metadata as Prisma.InputJsonValue | undefined,
 					correlationId: input.correlationId ?? null,
+					userId: input.userId,
 				},
 			});
 			return ok(toDomain(row));
@@ -80,22 +93,30 @@ export class PrismaNotificationRepository
 	async updateStatus(
 		id: string,
 		status: NotificationStatus,
+		userId: string,
 	): Promise<Result<Notification, DomainError>> {
 		try {
-			const row = await this.prisma.notification.update({
-				where: { id },
+			const row = await this.prisma.notification.updateMany({
+				where: { id, userId },
 				data: { status },
 			});
-			return ok(toDomain(row));
+			if (row.count === 0) return fail(new NotificationNotFound(id));
+
+			// Fetch the updated record
+			const updated = await this.prisma.notification.findFirst({
+				where: { id, userId },
+			});
+			if (!updated) return fail(new NotificationNotFound(id));
+			return ok(toDomain(updated));
 		} catch (err) {
 			return fail(new DatabaseError(err));
 		}
 	}
 
-	async markAllRead(): Promise<Result<void, DomainError>> {
+	async markAllRead(userId: string): Promise<Result<void, DomainError>> {
 		try {
 			await this.prisma.notification.updateMany({
-				where: { readAt: null },
+				where: { readAt: null, userId },
 				data: { readAt: new Date() },
 			});
 			return ok(undefined);
@@ -104,10 +125,10 @@ export class PrismaNotificationRepository
 		}
 	}
 
-	async markAllUnread(): Promise<Result<void, DomainError>> {
+	async markAllUnread(userId: string): Promise<Result<void, DomainError>> {
 		try {
 			await this.prisma.notification.updateMany({
-				where: { readAt: { not: null } },
+				where: { readAt: { not: null }, userId },
 				data: { readAt: null },
 			});
 			return ok(undefined);
@@ -116,11 +137,12 @@ export class PrismaNotificationRepository
 		}
 	}
 
-	async delete(id: string): Promise<Result<void, DomainError>> {
+	async delete(id: string, userId: string): Promise<Result<void, DomainError>> {
 		try {
-			await this.prisma.notification.delete({
-				where: { id },
+			const result = await this.prisma.notification.deleteMany({
+				where: { id, userId },
 			});
+			if (result.count === 0) return fail(new NotificationNotFound(id));
 			return ok(undefined);
 		} catch (err) {
 			return fail(new DatabaseError(err));
@@ -140,6 +162,7 @@ function toDomain(row: PrismaNotification): Notification {
 		readAt: row.readAt,
 		metadata: row.metadata as Record<string, unknown> | null,
 		correlationId: row.correlationId,
+		userId: row.userId,
 		createdAt: row.createdAt,
 		updatedAt: row.updatedAt,
 	};

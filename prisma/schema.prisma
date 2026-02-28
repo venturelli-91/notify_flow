@@ -20,11 +20,14 @@ model Notification {
   readAt        DateTime?
   metadata      Json?
   correlationId String?
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   @@index([status])
   @@index([channel])
+  @@index([userId])
   @@index([createdAt(sort: Desc)])
 }
 
@@ -37,9 +40,10 @@ model Template {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String   // bcrypt hash
-  name      String?
-  createdAt DateTime @default(now())
+  id            String         @id @default(cuid())
+  email         String         @unique
+  password      String         // bcrypt hash
+  name          String?
+  notifications Notification[]
+  createdAt     DateTime       @default(now())
 }

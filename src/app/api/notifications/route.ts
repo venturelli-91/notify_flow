@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { z } from "zod";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@server/lib/auth";
 import { notificationService } from "@server/lib/container";
 import { notificationQueue } from "@server/lib/queue";
 import { withCorrelationId, getCorrelationId } from "@server/lib/correlationId";
@@ -94,7 +96,18 @@ export async function GET(req: NextRequest) {
 			return authError;
 		}
 
-		const result = await notificationService.findAll();
+		// Get userId from session or API header
+		const session = await getServerSession(authOptions);
+		const userId = session?.user?.id ?? req.headers.get("x-user-id");
+
+		if (!userId) {
+			return NextResponse.json(
+				{ error: "UNAUTHORIZED", message: "User ID required" },
+				{ status: 401 },
+			);
+		}
+
+		const result = await notificationService.findAll(userId);
 		const ms = Date.now() - start;
 
 		if (!result.ok) {
@@ -124,6 +137,17 @@ export async function PATCH(req: NextRequest) {
 		const authError = checkApiKey(req);
 		if (authError) return authError;
 
+		// Get userId from session or API header
+		const session = await getServerSession(authOptions);
+		const userId = session?.user?.id ?? req.headers.get("x-user-id");
+
+		if (!userId) {
+			return NextResponse.json(
+				{ error: "UNAUTHORIZED", message: "User ID required" },
+				{ status: 401 },
+			);
+		}
+
 		let body: unknown;
 		try {
 			body = await req.json();
@@ -138,8 +162,8 @@ export async function PATCH(req: NextRequest) {
 
 		const result =
 			parsed.data.action === "mark_all_read"
-				? await notificationService.markAllRead()
-				: await notificationService.markAllUnread();
+				? await notificationService.markAllRead(userId)
+				: await notificationService.markAllUnread(userId);
 
 		if (!result.ok) {
 			return NextResponse.json(
@@ -167,6 +191,17 @@ export async function POST(req: NextRequest) {
 		if (authError) {
 			logger.warn("Unauthorized request rejected", { ip });
 			return authError;
+		}
+
+		// Get userId from session or API header
+		const session = await getServerSession(authOptions);
+		const userId = session?.user?.id ?? req.headers.get("x-user-id");
+
+		if (!userId) {
+			return NextResponse.json(
+				{ error: "UNAUTHORIZED", message: "User ID required" },
+				{ status: 401 },
+			);
 		}
 
 		// Rate limiting
@@ -208,6 +243,7 @@ export async function POST(req: NextRequest) {
 		const createResult = await notificationService.createPending({
 			...parsed.data,
 			correlationId,
+			userId,
 		});
 		if (!createResult.ok) {
 			logger.error("Failed to persist notification", {
