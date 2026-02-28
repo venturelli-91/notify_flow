@@ -12,6 +12,7 @@ import { notificationQueue } from "@server/lib/queue";
 import { withCorrelationId, getCorrelationId } from "@server/lib/correlationId";
 import { logger } from "@server/lib/logger";
 import { isRateLimited, getRateLimitState } from "@server/lib/rateLimit";
+import { env } from "@server/lib/env";
 
 // ── Validation schema ─────────────────────────────────────────────────────────
 
@@ -37,7 +38,7 @@ const SendNotificationSchema = z.object({
  * Defaults to loopback only (safe for local dev + single-proxy setups).
  */
 const TRUSTED_PROXIES = new Set(
-	(process.env["TRUSTED_PROXY_IPS"] ?? "127.0.0.1,::1,::ffff:127.0.0.1")
+	env.TRUSTED_PROXY_IPS
 		.split(",")
 		.map((ip) => ip.trim()),
 );
@@ -66,7 +67,7 @@ function clientIp(req: NextRequest): string {
  * Returns null when auth passes or API_KEY is unset (local dev).
  */
 function checkApiKey(req: NextRequest): NextResponse | null {
-	const apiKey = process.env["API_KEY"];
+	const apiKey = env.API_KEY;
 	if (!apiKey) return null; // auth disabled in local dev
 
 	const auth = req.headers.get("authorization") ?? "";

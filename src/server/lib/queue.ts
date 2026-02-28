@@ -58,6 +58,6 @@ export const notificationQueue: Queue<NotificationJobData> =
 		},
 	});
 
-if (process.env["NODE_ENV"] !== "production") {
+if (env.NODE_ENV !== "production") {
 	globalForQueue.notificationQueue = notificationQueue;
 }
