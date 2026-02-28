@@ -79,6 +79,8 @@ export function useNotifications() {
 				readAt: null,
 				metadata: payload.metadata ?? null,
 				correlationId: null,
+				userId: "optimistic",
+				templateId: null,
 				createdAt: new Date(),
 				updatedAt: new Date(),
 			};

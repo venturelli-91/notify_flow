@@ -1,8 +1,8 @@
 import type {
 	PrismaClient,
 	Notification as PrismaNotification,
-	Prisma,
 } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { type Result, ok, fail } from "../domain/result/Result";
 import { type DomainError } from "../domain/errors/DomainError";
 import {
