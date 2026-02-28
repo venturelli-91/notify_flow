@@ -19,6 +19,8 @@ function makeNotification(overrides: Partial<Notification> = {}): Notification {
 		readAt: null,
 		metadata: null,
 		correlationId: null,
+		userId: "user-1",
+		templateId: null,
 		createdAt: new Date(),
 		updatedAt: new Date(),
 		...overrides,
@@ -45,10 +47,15 @@ function makeWriter(notification: Notification): INotificationWriter & {
 
 function makeReader(
 	notification: Notification = makeNotification(),
-): INotificationReader & { findAll: Mock; findById: Mock } {
+): INotificationReader & {
+	findAll: Mock;
+	findById: Mock;
+	findByIdInternal: Mock;
+} {
 	return {
 		findAll: vi.fn().mockResolvedValue(ok([notification])),
 		findById: vi.fn().mockResolvedValue(ok(notification)),
+		findByIdInternal: vi.fn().mockResolvedValue(ok(notification)),
 	};
 }
 
@@ -127,7 +134,11 @@ describe("NotificationService.deliver()", () => {
 		const result = await service.deliver(notification);
 
 		expect(result.ok).toBe(true);
-		expect(writer.updateStatus).toHaveBeenCalledWith(notification.id, "sent");
+		expect(writer.updateStatus).toHaveBeenCalledWith(
+			notification.id,
+			"sent",
+			notification.userId,
+		);
 	});
 
 	it("updates status to 'failed' when channel.send() returns a failure", async () => {
@@ -145,7 +156,11 @@ describe("NotificationService.deliver()", () => {
 
 		await service.deliver(notification);
 
-		expect(writer.updateStatus).toHaveBeenCalledWith(notification.id, "failed");
+		expect(writer.updateStatus).toHaveBeenCalledWith(
+			notification.id,
+			"failed",
+			notification.userId,
+		);
 	});
 });
 
@@ -166,10 +181,14 @@ describe("NotificationService.createPending()", () => {
 			body: "Body",
 			channel: "email",
 			correlationId: "req-xyz",
+			userId: "user-1",
 		});
 
 		expect(writer.create).toHaveBeenCalledWith(
-			expect.objectContaining({ correlationId: "req-xyz" }),
+			expect.objectContaining({
+				correlationId: "req-xyz",
+				userId: "user-1",
+			}),
 		);
 	});
 });
@@ -186,10 +205,10 @@ describe("NotificationService.findAll()", () => {
 			reader,
 		);
 
-		const result = await service.findAll();
+		const result = await service.findAll("user-1");
 
 		expect(result.ok).toBe(true);
-		expect(reader.findAll).toHaveBeenCalledOnce();
+		expect(reader.findAll).toHaveBeenCalledWith("user-1");
 		if (result.ok) expect(result.value).toEqual([notification]);
 	});
 });
@@ -204,10 +223,10 @@ describe("NotificationService.findById()", () => {
 			reader,
 		);
 
-		const result = await service.findById("notif-42");
+		const result = await service.findById("notif-42", "user-1");
 
 		expect(result.ok).toBe(true);
-		expect(reader.findById).toHaveBeenCalledWith("notif-42");
+		expect(reader.findById).toHaveBeenCalledWith("notif-42", "user-1");
 	});
 });
 
@@ -223,10 +242,10 @@ describe("NotificationService.markAllRead()", () => {
 			makeReader(notification),
 		);
 
-		const result = await service.markAllRead();
+		const result = await service.markAllRead("user-1");
 
 		expect(result.ok).toBe(true);
-		expect(writer.markAllRead).toHaveBeenCalledOnce();
+		expect(writer.markAllRead).toHaveBeenCalledWith("user-1");
 	});
 });
 
@@ -240,10 +259,10 @@ describe("NotificationService.markAllUnread()", () => {
 			makeReader(notification),
 		);
 
-		const result = await service.markAllUnread();
+		const result = await service.markAllUnread("user-1");
 
 		expect(result.ok).toBe(true);
-		expect(writer.markAllUnread).toHaveBeenCalledOnce();
+		expect(writer.markAllUnread).toHaveBeenCalledWith("user-1");
 	});
 });
 
@@ -257,9 +276,13 @@ describe("NotificationService.retry()", () => {
 			makeReader(notification),
 		);
 
-		await service.retry("notif-5");
+		await service.retry("notif-5", "user-1");
 
-		expect(writer.updateStatus).toHaveBeenCalledWith("notif-5", "pending");
+		expect(writer.updateStatus).toHaveBeenCalledWith(
+			"notif-5",
+			"pending",
+			"user-1",
+		);
 	});
 });
 
@@ -276,6 +299,6 @@ describe("NotificationService.markAsDeleted()", () => {
 		const result = await service.markAsDeleted("notif-9", "user-1");
 
 		expect(result.ok).toBe(true);
-		expect(writer.delete).toHaveBeenCalledWith("notif-9");
+		expect(writer.delete).toHaveBeenCalledWith("notif-9", "user-1");
 	});
 });
