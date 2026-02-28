@@ -47,9 +47,9 @@ NotifyFlow is a production-ready notification system designed for reliability, t
 
 ```yaml
 services:
-  postgres:      # Main database (port 5433)
-  redis:         # Queue & cache (port 6379)
-  app:           # Next.js server (port 3000)
+  postgres: # Main database (port 5433)
+  redis: # Queue & cache (port 6379)
+  app: # Next.js server (port 3000)
 ```
 
 ## 🚀 Quick Start
@@ -72,32 +72,38 @@ Keep the repo inside WSL filesystem (e.g., `/home/<user>/...`) to avoid I/O slow
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/venturelli-91/notify_flow.git
    cd notify_flow
    ```
 
 2. **Copy environment file**
+
    ```bash
    cp .env.example .env
    ```
 
 3. **Start services**
+
    ```bash
    docker compose up -d
    ```
 
 4. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 5. **Run migrations**
+
    ```bash
    npm run migrations
    ```
 
 6. **Seed database (optional)**
+
    ```bash
    npm run seed
    ```
@@ -289,8 +295,8 @@ All operations return explicit `Result<T, E>` types instead of throwing exceptio
 const result = await notificationService.deliver(notification);
 
 if (!result.ok) {
-  logger.error("Delivery failed", { error: result.error.message });
-  return { error: result.error.code, status: result.error.statusCode };
+	logger.error("Delivery failed", { error: result.error.message });
+	return { error: result.error.code, status: result.error.statusCode };
 }
 
 // result.value is guaranteed to exist
@@ -303,11 +309,11 @@ No service locators. All dependencies explicitly injected via constructor.
 
 ```typescript
 class NotificationService {
-  constructor(
-    private readonly channels: INotificationChannel[],
-    private readonly writer: INotificationWriter,
-    private readonly reader: INotificationReader,
-  ) {}
+	constructor(
+		private readonly channels: INotificationChannel[],
+		private readonly writer: INotificationWriter,
+		private readonly reader: INotificationReader,
+	) {}
 }
 
 // Wired in container.ts, resolved once per app
@@ -337,15 +343,15 @@ Test domain services in isolation with mocked dependencies — no database, no H
 
 ```typescript
 describe("NotificationService.deliver()", () => {
-  it("dispatches to correct channel and updates status", async () => {
-    const mockChannel = { send: vi.fn().mockResolvedValue(ok(undefined)) };
-    const service = new NotificationService([mockChannel], writer, reader);
+	it("dispatches to correct channel and updates status", async () => {
+		const mockChannel = { send: vi.fn().mockResolvedValue(ok(undefined)) };
+		const service = new NotificationService([mockChannel], writer, reader);
 
-    const result = await service.deliver(notification);
+		const result = await service.deliver(notification);
 
-    expect(result.ok).toBe(true);
-    expect(mockChannel.send).toHaveBeenCalledWith(notification);
-  });
+		expect(result.ok).toBe(true);
+		expect(mockChannel.send).toHaveBeenCalledWith(notification);
+	});
 });
 ```
 
@@ -359,12 +365,12 @@ Test API routes with real database (test DB) and queue.
 
 ```typescript
 it("POST /api/notifications enqueues delivery", async () => {
-  const response = await POST(req);
-  expect(response.status).toBe(202);
+	const response = await POST(req);
+	expect(response.status).toBe(202);
 
-  const json = await response.json();
-  const job = await notificationQueue.getJob(json.jobId);
-  expect(job?.data.notificationId).toBeDefined();
+	const json = await response.json();
+	const job = await notificationQueue.getJob(json.jobId);
+	expect(job?.data.notificationId).toBeDefined();
 });
 ```
 
@@ -397,17 +403,20 @@ it("POST /api/notifications enqueues delivery", async () => {
 ## 🤝 Contributing
 
 1. Create a feature branch:
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
 
 2. Make changes and test:
+
    ```bash
    npm run test
    npm run lint --fix
    ```
 
 3. Commit with semantic messages:
+
    ```bash
    git commit -m "feat: add email template support"
    ```
@@ -443,6 +452,7 @@ refactor: extract TemplateRenderer logic
 ### Port already in use
 
 Change ports in `.env`:
+
 ```bash
 APP_PORT=3001
 ```
@@ -450,6 +460,7 @@ APP_PORT=3001
 ### Database connection error
 
 Check PostgreSQL is running:
+
 ```bash
 docker compose ps
 docker compose logs postgres
@@ -458,6 +469,7 @@ docker compose logs postgres
 ### Redis queue not processing
 
 Verify worker is running and Redis accessible:
+
 ```bash
 docker compose logs app
 redis-cli ping
@@ -466,6 +478,7 @@ redis-cli ping
 ### Tests failing
 
 Clean and reinstall:
+
 ```bash
 rm -rf node_modules .next
 npm install
@@ -476,11 +489,13 @@ npm run test
 ## 🔗 Useful Links
 
 **Documentation:**
+
 - [ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - [CODE_PATTERNS.md](docs/CODE_PATTERNS.md)
 - [environment-variables.md](docs/environment-variables.md)
 
 **Stack:**
+
 - [Next.js Docs](https://nextjs.org/docs)
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/)
 - [Prisma Documentation](https://www.prisma.io/docs/)
@@ -491,6 +506,7 @@ npm run test
 - [TanStack Query](https://tanstack.com/query/latest)
 
 **Tools:**
+
 - [PostgreSQL](https://www.postgresql.org/docs/)
 - [Redis](https://redis.io/documentation)
 - [Docker](https://docs.docker.com/)
@@ -502,6 +518,7 @@ MIT License. See [LICENSE](LICENSE) for details.
 ## 🆘 Support
 
 For issues, questions, or suggestions:
+
 - Open an [issue on GitHub](https://github.com/venturelli-91/notify_flow/issues)
 - Check existing [documentation](docs/)
 
