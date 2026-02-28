@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { queryKeys } from "@client/lib/queryKeys";
+import { Button } from "@client/components/ui/Button";
 import type { Notification } from "@server/core/domain/entities/Notification";
 
 interface NotificationCardProps {
@@ -209,25 +210,31 @@ export function NotificationCard({ notification }: NotificationCardProps) {
 				</span>
 
 				{canRetry && (
-					<button
+					<Button
 						type="button"
 						onClick={() => retryMutation.mutate()}
-						disabled={retryMutation.isPending || deleteMutation.isPending}
-						className="p-1.5 text-gray-500 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-colors disabled:opacity-50 max-sm:hidden"
+						disabled={deleteMutation.isPending}
+						isLoading={retryMutation.isPending}
+						variant="secondary"
+						size="sm"
+						className="max-sm:hidden"
 						title="Retry notification">
 						<RetryIcon />
-					</button>
+					</Button>
 				)}
 
 				{canRetry && (
-					<button
+					<Button
 						type="button"
 						onClick={() => deleteMutation.mutate()}
-						disabled={deleteMutation.isPending || retryMutation.isPending}
-						className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 max-sm:hidden"
+						disabled={retryMutation.isPending}
+						isLoading={deleteMutation.isPending}
+						variant="danger"
+						size="sm"
+						className="max-sm:hidden"
 						title="Delete notification">
 						<DeleteIcon />
-					</button>
+					</Button>
 				)}
 			</div>
 		</div>

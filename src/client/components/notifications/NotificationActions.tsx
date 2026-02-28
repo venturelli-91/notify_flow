@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { queryKeys } from "@client/lib/queryKeys";
+import { Button } from "@client/components/ui/Button";
 
 async function bulkAction(
 	action: "mark_all_read" | "mark_all_unread",
@@ -43,24 +44,26 @@ export function NotificationActions() {
 				className="text-[13px] font-medium text-white bg-violet-600 rounded-lg px-4 py-2 hover:bg-violet-700 transition-colors">
 				+ New Notification
 			</Link>
-			<button
+			<Button
 				type="button"
 				onClick={() => markAllReadMutation.mutate()}
-				disabled={
-					markAllReadMutation.isPending || markAllUnreadMutation.isPending
-				}
-				className="max-sm:hidden min-w-[140px] text-[13px] font-medium text-gray-700 border border-gray-300 rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors disabled:opacity-50">
-				{markAllReadMutation.isPending ? "Updating…" : "Mark all as Read"}
-			</button>
-			<button
+				disabled={markAllUnreadMutation.isPending}
+				isLoading={markAllReadMutation.isPending}
+				variant="secondary"
+				size="sm"
+				className="max-sm:hidden">
+				Mark all as Read
+			</Button>
+			<Button
 				type="button"
 				onClick={() => markAllUnreadMutation.mutate()}
-				disabled={
-					markAllUnreadMutation.isPending || markAllReadMutation.isPending
-				}
-				className="max-sm:hidden min-w-[148px] text-[13px] font-medium text-gray-700 border border-gray-300 rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors disabled:opacity-50">
-				{markAllUnreadMutation.isPending ? "Updating…" : "Mark all as Unread"}
-			</button>
+				disabled={markAllReadMutation.isPending}
+				isLoading={markAllUnreadMutation.isPending}
+				variant="secondary"
+				size="sm"
+				className="max-sm:hidden">
+				Mark all as Unread
+			</Button>
 		</div>
 	);
 }
