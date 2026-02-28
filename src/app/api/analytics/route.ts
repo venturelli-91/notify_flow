@@ -13,9 +13,10 @@ export async function GET(req: NextRequest) {
 
 		logger.info("GET /api/analytics");
 
-		// Get userId from JWT token
-		const token = await getToken({ req, secret: env.NEXTAUTH_SECRET });
-		const userId = token?.id as string | undefined;
+		// x-user-id is injected by middleware from the verified JWT (spoofing-safe).
+		const userId =
+			req.headers.get("x-user-id") ??
+			((await getToken({ req, secret: env.NEXTAUTH_SECRET }))?.id as string | undefined);
 
 		if (!userId) {
 			return NextResponse.json(

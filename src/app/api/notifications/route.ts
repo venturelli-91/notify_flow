@@ -102,9 +102,11 @@ export async function GET(req: NextRequest) {
 			return authError;
 		}
 
-		// Get userId from JWT token or API header
-		const token = await getToken({ req, secret: env.NEXTAUTH_SECRET });
-		const userId = (token?.id as string | undefined) ?? req.headers.get("x-user-id");
+		// x-user-id is injected by middleware from the verified JWT (spoofing-safe).
+		// getToken is a fallback for direct programmatic access (API key scenario).
+		const userId =
+			req.headers.get("x-user-id") ??
+			((await getToken({ req, secret: env.NEXTAUTH_SECRET }))?.id as string | undefined);
 
 		if (!userId) {
 			return NextResponse.json(
@@ -157,9 +159,11 @@ export async function PATCH(req: NextRequest) {
 		const authError = checkApiKey(req);
 		if (authError) return authError;
 
-		// Get userId from JWT token or API header
-		const token = await getToken({ req, secret: env.NEXTAUTH_SECRET });
-		const userId = (token?.id as string | undefined) ?? req.headers.get("x-user-id");
+		// x-user-id is injected by middleware from the verified JWT (spoofing-safe).
+		// getToken is a fallback for direct programmatic access (API key scenario).
+		const userId =
+			req.headers.get("x-user-id") ??
+			((await getToken({ req, secret: env.NEXTAUTH_SECRET }))?.id as string | undefined);
 
 		if (!userId) {
 			return NextResponse.json(
@@ -213,9 +217,11 @@ export async function POST(req: NextRequest) {
 			return authError;
 		}
 
-		// Get userId from JWT token or API header
-		const token = await getToken({ req, secret: env.NEXTAUTH_SECRET });
-		const userId = (token?.id as string | undefined) ?? req.headers.get("x-user-id");
+		// x-user-id is injected by middleware from the verified JWT (spoofing-safe).
+		// getToken is a fallback for direct programmatic access (API key scenario).
+		const userId =
+			req.headers.get("x-user-id") ??
+			((await getToken({ req, secret: env.NEXTAUTH_SECRET }))?.id as string | undefined);
 
 		if (!userId) {
 			return NextResponse.json(

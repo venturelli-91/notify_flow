@@ -17,9 +17,10 @@ export async function POST(
 
 		logger.info("POST /api/notifications/[id]/retry", { id });
 
-		// Get userId from JWT token
-		const token = await getToken({ req, secret: env.NEXTAUTH_SECRET });
-		const userId = token?.id as string | undefined;
+		// x-user-id is injected by middleware from the verified JWT (spoofing-safe).
+		const userId =
+			req.headers.get("x-user-id") ??
+			((await getToken({ req, secret: env.NEXTAUTH_SECRET }))?.id as string | undefined);
 
 		if (!userId) {
 			return NextResponse.json(
@@ -65,9 +66,10 @@ export async function DELETE(
 
 		logger.info("DELETE /api/notifications/[id]", { id });
 
-		// Get userId from JWT token
-		const token = await getToken({ req, secret: env.NEXTAUTH_SECRET });
-		const userId = token?.id as string | undefined;
+		// x-user-id is injected by middleware from the verified JWT (spoofing-safe).
+		const userId =
+			req.headers.get("x-user-id") ??
+			((await getToken({ req, secret: env.NEXTAUTH_SECRET }))?.id as string | undefined);
 
 		if (!userId) {
 			return NextResponse.json(
