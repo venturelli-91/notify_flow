@@ -24,6 +24,8 @@ function makeNotification(overrides: Partial<Notification> = {}): Notification {
 		readAt: null,
 		metadata: null,
 		correlationId: null,
+		userId: "test-user-id",
+		templateId: null,
 		createdAt: new Date(),
 		updatedAt: new Date(),
 		...overrides,
@@ -73,9 +75,7 @@ describe("NotificationList", () => {
 	it("renders empty state when the list is empty", () => {
 		mockQuery({ data: [] });
 		renderWithProviders(<NotificationList />);
-		expect(
-			screen.getByText(/no notifications yet/i),
-		).toBeInTheDocument();
+		expect(screen.getByText(/no notifications yet/i)).toBeInTheDocument();
 	});
 
 	it("renders error state when query fails", () => {
