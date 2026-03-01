@@ -37,6 +37,9 @@ NEXTAUTH_SECRET=your-secret-at-least-32-chars
 These have sensible defaults:
 
 ```bash
+# Authentication
+NEXTAUTH_URL=http://localhost:3000  # Required in production, optional in dev
+
 # Redis & Queue
 REDIS_URL=redis://localhost:6379  # default
 

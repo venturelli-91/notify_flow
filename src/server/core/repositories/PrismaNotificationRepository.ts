@@ -83,7 +83,7 @@ export class PrismaNotificationRepository
 		id: string,
 	): Promise<Result<Notification, DomainError>> {
 		try {
-			const row = await this.prisma.notification.findUnique({ where: { id } });
+			const row = await this.prisma.notification.findFirst({ where: { id } });
 			if (!row) return fail(new NotificationNotFound(id));
 			return ok(toDomain(row));
 		} catch (err) {

@@ -18,7 +18,9 @@ function groupLabel(date: Date): string {
 	return d.toLocaleDateString("en-US", { day: "numeric", month: "short" });
 }
 
-function groupByDate(list: Notification[]): { label: string; items: Notification[] }[] {
+function groupByDate(
+	list: Notification[],
+): { label: string; items: Notification[] }[] {
 	const map = new Map<string, Notification[]>();
 	for (const n of list) {
 		const key = groupLabel(new Date(n.createdAt));
@@ -33,9 +35,13 @@ function groupByDate(list: Notification[]): { label: string; items: Notification
 
 export function NotificationListSkeleton() {
 	return (
-		<div aria-label="Loading notifications" className="space-y-2.5">
+		<div
+			aria-label="Loading notifications"
+			className="space-y-2.5">
 			{[0, 1, 2].map((i) => (
-				<div key={i} className="flex items-center gap-4 bg-white rounded-xl shadow-sm px-5 py-[18px] animate-pulse">
+				<div
+					key={i}
+					className="flex items-center gap-4 bg-white rounded-xl shadow-sm px-5 py-[18px] animate-pulse">
 					<div className="h-12 w-12 rounded-xl bg-gray-200 flex-shrink-0" />
 					<div className="flex-1 space-y-2">
 						<div className="h-3.5 bg-gray-200 rounded w-1/2" />
@@ -69,16 +75,19 @@ export function NotificationList() {
 	const notifications = q
 		? all.filter(
 				(n) =>
-					n.title.toLowerCase().includes(q) ||
-					n.body.toLowerCase().includes(q),
+					n.title.toLowerCase().includes(q) || n.body.toLowerCase().includes(q),
 			)
 		: all;
 
 	if (all.length === 0) {
 		return (
 			<div className="rounded-xl bg-gray-50 border border-gray-200 px-5 py-10 text-center">
-				<p className="text-sm font-medium text-gray-600">No notifications yet</p>
-				<p className="mt-1 text-xs text-gray-400">Send your first notification to get started.</p>
+				<p className="text-sm font-medium text-gray-600">
+					No notifications yet
+				</p>
+				<p className="mt-1 text-xs text-gray-400">
+					Send your first notification to get started.
+				</p>
 				<Link
 					href="/send"
 					className="mt-4 inline-block rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700 transition-colors">
@@ -91,8 +100,12 @@ export function NotificationList() {
 	if (notifications.length === 0) {
 		return (
 			<div className="rounded-xl bg-gray-50 border border-gray-200 px-5 py-10 text-center">
-				<p className="text-sm font-medium text-gray-600">No results for &ldquo;{searchParams?.get("q")}&rdquo;</p>
-				<p className="mt-1 text-xs text-gray-400">Try a different search term.</p>
+				<p className="text-sm font-medium text-gray-600">
+					No results for &ldquo;{searchParams?.get("q")}&rdquo;
+				</p>
+				<p className="mt-1 text-xs text-gray-400">
+					Try a different search term.
+				</p>
 			</div>
 		);
 	}

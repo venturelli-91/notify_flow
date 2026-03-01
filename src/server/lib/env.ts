@@ -54,15 +54,15 @@ const EnvSchema = z.object({
 		.string()
 		.min(32, "NEXTAUTH_SECRET must be at least 32 characters"),
 
+	NEXTAUTH_URL: z.string().url("NEXTAUTH_URL must be a valid URL").optional(),
+
 	// Optional API key for programmatic access (disabled when absent)
 	API_KEY: z.string().optional(),
 
 	// ── Network / Proxy ───────────────────────────────────────────────────────
 	// Comma-separated list of trusted reverse proxy IPs.
 	// X-Forwarded-For is only trusted when the direct peer matches this list.
-	TRUSTED_PROXY_IPS: z
-		.string()
-		.default("127.0.0.1,::1,::ffff:127.0.0.1"),
+	TRUSTED_PROXY_IPS: z.string().default("127.0.0.1,::1,::ffff:127.0.0.1"),
 
 	// ── Environment ───────────────────────────────────────────────────────────
 	NODE_ENV: z

@@ -18,6 +18,7 @@ import {
 } from "@/app/api/notifications/[id]/route";
 import { GET as getAnalytics } from "@/app/api/analytics/route";
 import { prisma } from "@server/lib/prisma";
+import { redis } from "@server/lib/redis";
 import { NextRequest } from "next/server";
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -70,17 +71,28 @@ function makeIdParams(id: string): { params: Promise<{ id: string }> } {
 function makeRetryRequest(id: string): NextRequest {
 	return new NextRequest(`http://localhost/api/notifications/${id}/retry`, {
 		method: "POST",
+		headers: {
+			"x-user-id": TEST_USER_ID,
+		},
 	});
 }
 
 function makeDeleteRequest(id: string): NextRequest {
 	return new NextRequest(`http://localhost/api/notifications/${id}`, {
 		method: "DELETE",
+		headers: {
+			"x-user-id": TEST_USER_ID,
+		},
 	});
 }
 
 function makeAnalyticsRequest(): NextRequest {
-	return new NextRequest("http://localhost/api/analytics", { method: "GET" });
+	return new NextRequest("http://localhost/api/analytics", {
+		method: "GET",
+		headers: {
+			"x-user-id": TEST_USER_ID,
+		},
+	});
 }
 
 async function seedNotification(
@@ -107,7 +119,25 @@ async function seedNotification(
 // ── Setup ─────────────────────────────────────────────────────────────────────
 
 beforeEach(async () => {
+	// Clean up all data
 	await prisma.notification.deleteMany();
+	await prisma.user.deleteMany();
+
+	// Clear Redis rate limiting data
+	const keys = await redis.keys("ratelimit:*");
+	if (keys.length > 0) {
+		await redis.del(...keys);
+	}
+
+	// Create test user that all notifications will belong to
+	await prisma.user.create({
+		data: {
+			id: TEST_USER_ID,
+			email: "test@example.com",
+			password: "$2a$10$test.hash.for.integration.tests", // bcrypt hash placeholder
+			name: "Test User",
+		},
+	});
 });
 
 // ── POST /api/notifications ───────────────────────────────────────────────────
@@ -193,23 +223,29 @@ describe("GET /api/notifications", () => {
 	});
 
 	it("returns existing notifications sorted newest-first", async () => {
-		await prisma.notification.createMany({
-			data: [
-				{
-					title: "First",
-					body: "B",
-					channel: "in-app",
-					status: "sent",
-					userId: TEST_USER_ID,
-				},
-				{
-					title: "Second",
-					body: "B",
-					channel: "in-app",
-					status: "sent",
-					userId: TEST_USER_ID,
-				},
-			],
+		// Create first notification
+		await prisma.notification.create({
+			data: {
+				title: "First",
+				body: "B",
+				channel: "in-app",
+				status: "sent",
+				userId: TEST_USER_ID,
+			},
+		});
+
+		// Small delay to ensure different timestamps
+		await new Promise((resolve) => setTimeout(resolve, 10));
+
+		// Create second notification - should be newer
+		await prisma.notification.create({
+			data: {
+				title: "Second",
+				body: "B",
+				channel: "in-app",
+				status: "sent",
+				userId: TEST_USER_ID,
+			},
 		});
 
 		const res = await GET(makeGetRequest());
@@ -255,7 +291,10 @@ describe("PATCH /api/notifications", () => {
 	it("returns 400 on invalid JSON body", async () => {
 		const req = new NextRequest("http://localhost/api/notifications", {
 			method: "PATCH",
-			headers: { "Content-Type": "application/json" },
+			headers: {
+				"Content-Type": "application/json",
+				"x-user-id": TEST_USER_ID,
+			},
 			body: "not json {{{",
 		});
 		const res = await PATCH(req);

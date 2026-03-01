@@ -524,4 +524,4 @@ For issues, questions, or suggestions:
 
 ---
 
-**Built with ❤️ by [Venturelli](https://github.com/venturelli-91)**
+**Built by [Venturelli](https://github.com/venturelli-91)**
