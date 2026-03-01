@@ -1,6 +1,4 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useSession } from "next-auth/react";
-import { toast } from "sonner";
 import { queryKeys } from "@client/lib/queryKeys";
 import type { Notification } from "@server/core/domain/entities/Notification";
 
@@ -41,7 +39,6 @@ type EnqueuedJob = {
  */
 export function useNotifications(page = 1) {
 	const queryClient = useQueryClient();
-	const { data: session } = useSession();
 
 	// Fetch notifications with session cookies
 	async function fetchNotifications(): Promise<PaginatedResponse> {
@@ -70,7 +67,6 @@ export function useNotifications(page = 1) {
 		queryKey: queryKeys.notifications.list(page),
 		queryFn: fetchNotifications,
 		select: (data) => data.data, // Extract just the items array for display
-		enabled: !!session, // Only run query if session exists
 	});
 
 	const mutation = useMutation({
@@ -82,7 +78,7 @@ export function useNotifications(page = 1) {
 				queryKey: queryKeys.notifications.list(page),
 			});
 
-			const previous = queryClient.getQueryData<Notification[]>(
+			const previous = queryClient.getQueryData<PaginatedResponse>(
 				queryKeys.notifications.list(page),
 			);
 
@@ -102,9 +98,12 @@ export function useNotifications(page = 1) {
 				updatedAt: new Date(),
 			};
 
-			queryClient.setQueryData<Notification[]>(
+			queryClient.setQueryData<PaginatedResponse>(
 				queryKeys.notifications.list(page),
-				(old) => [optimistic, ...(old ?? [])],
+				(old) =>
+					old
+						? { ...old, data: [optimistic, ...old.data], total: old.total + 1 }
+						: { data: [optimistic], total: 1, page: 1, limit: 20, hasMore: false },
 			);
 
 			return { previous };
@@ -112,12 +111,11 @@ export function useNotifications(page = 1) {
 
 		onError: (_err, _payload, context) => {
 			if (context?.previous !== undefined) {
-				queryClient.setQueryData(
+				queryClient.setQueryData<PaginatedResponse>(
 					queryKeys.notifications.list(page),
 					context.previous,
 				);
 			}
-			toast.error("Failed to send notification");
 		},
 
 		onSettled: () => {
